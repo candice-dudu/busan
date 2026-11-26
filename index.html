@@ -495,17 +495,17 @@
                         class="flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center space-x-1.5"
                     >
                         <i class="fa-solid fa-users text-[11px]"></i>
-                        <span>四人共享清單 ({{ sharedShoppingList.length }})</span>
+                        <span>共享清單 ({{ sharedShoppingList.length }})</span>
                     </button>
                 </div>
 
                 <div v-if="activeShoppingList.length === 0" class="kawaii-card rounded-2xl text-center py-12 px-4">
                     <img :src="shoppingScope === 'private' ? trainIcons.yellow : trainIcons.blue" class="w-10 h-10 object-contain mx-auto mb-2">
                     <p class="font-bold text-dark-brown">
-                        {{ shoppingScope === 'private' ? `${currentUser} 的私人清單還是空的喔！` : '四人共享伴手禮清單還是空的喔！' }}
+                        {{ shoppingScope === 'private' ? `${currentUser} 的私人清單還是空的喔！` : '共享伴手禮清單還是空的喔！' }}
                     </p>
                     <p class="text-xs text-warm-gray mt-1">
-                        {{ shoppingScope === 'private' ? '只有妳自己看得到，放心把想買的禮物記在這裡～' : '四人同步共享，適合記下大家一起逛或互相提醒的必買好物！' }}
+                        {{ shoppingScope === 'private' ? '只有妳自己看得到，放心把想買的禮物記在這裡～' : '同步共享，適合記下大家一起逛或互相提醒的必買好物！' }}
                     </p>
                 </div>
 
@@ -579,7 +579,7 @@
                     <div class="flex justify-between items-center cursor-pointer" @click="showSettlement = !showSettlement">
                         <h3 class="font-bold text-dark-brown text-sm flex items-center">
                             <img :src="trainIcons.green" class="w-5 h-5 object-contain mr-2">
-                            四人代墊自動結算表 (港幣 / 韓元分開計)
+                            代墊自動結算表 (港幣 / 韓元分開計)
                         </h3>
                         <span class="text-xs text-sky-blue font-bold">
                             {{ showSettlement ? '收起 ▲' : '展開結算 ▼' }}
@@ -905,7 +905,7 @@
              <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
                 <h3 class="text-xl font-bold mb-1 text-center text-dark-brown">新增購物項目</h3>
                 <p class="text-xs text-center text-sky-blue font-bold mb-4">
-                    將加入至：{{ shoppingScope === 'private' ? `🔒 ${currentUser} 的私人清單` : '🌐 四人共享清單' }}
+                    將加入至：{{ shoppingScope === 'private' ? `🔒 ${currentUser} 的私人清單` : '🌐 共享清單' }}
                 </p>
                 <input v-model="newShopItem.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-3 mb-4 outline-none" placeholder="商品名稱 (例: 膠原蛋白果凍)">
                 
@@ -1038,7 +1038,7 @@
         <!-- 3.5 設定韓元公費池 Modal -->
         <div v-if="showPoolModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
-                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定四人韓元公費池 💰</h3>
+                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定韓元公費池 💰</h3>
                 <p class="text-xs text-warm-gray text-center mb-4">輸入出發前大家夾錢放入公費的總韓元金額</p>
                 
                 <div class="space-y-3">
@@ -1631,7 +1631,7 @@
                 const savePoolSetting = () => {
                     saveAllToLocal();
                     showPoolModal.value = false;
-                    showToast('已更新四人公費池總額！');
+                    showToast('已更新公費池總額！');
                 };
 
                 // 複製雙幣別分帳明細至剪貼簿
@@ -1784,7 +1784,7 @@
                     saveAllToLocal();
                     showAddShopModal.value = false;
                     newShopItem.value = { name: '', image: null, bought: false };
-                    showToast(shoppingScope.value === 'private' ? '已加入私人購物清單！' : '已加入四人共享清單！');
+                    showToast(shoppingScope.value === 'private' ? '已加入私人購物清單！' : '已加入共享清單！');
                 };
 
                 const deleteShoppingItem = (index) => {
