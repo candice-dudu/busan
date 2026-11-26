@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>釜山海雲台小火車之旅 🌊</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts (Rounded & Cute) -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Tailwind Configuration (日系溫馨粉彩色系) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'paper-white': '#FAF6ED',   // 溫暖紙砂白 (大背景)
+                        'sea-blue': '#E4F1F6',      // 海風淡藍 (次要區塊/卡片底)
+                        'sunset-yellow': '#FBD76D', // 日落暖黃 (日期選中/重點按鈕)
+                        'coral-red': '#E4776C',     // 復古朱紅 (提醒/重點強調)
+                        'sky-blue': '#6EA2CE',      // 復古天藍 (主按鈕/選中Tab/進度條)
+                        'forest-green': '#92C889',  // 森林嫩綠 (狀態/輔助點綴)
+                        'dark-brown': '#4E3629',    // 深茶褐 (文字/手繪邊框，代替純黑)
+                        'warm-gray': '#8C7D73'      // 灰褐 (輔助文字)
+                    },
+                    fontFamily: {
+                        'sans': ['"Zen Maru Gothic"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 隱藏滾動條但保留功能 (App感) */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* 頁首圖片圓弧遮罩效果 */
+        .header-curve {
+            border-radius: 0 0 36px 36px; 
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(78, 54, 41, 0.08);
+            border-bottom: 2px solid #4E3629;
+        }
+
+        /* 確保全螢幕且無彈性滾動 (iOS) */
+        body {
+            background-color: #FAF6ED;
+            color: #4E3629;
+            overscroll-behavior-y: none;
+        }
+        
+        /* 手繪質感卡片與邊框 */
+        .kawaii-card {
+            background-color: #FFFFFF;
+            border: 2px solid #4E3629;
+            box-shadow: 0 3px 0px #8C7D73;
+        }
+
+        .kawaii-btn {
+            border: 2px solid #4E3629;
+            box-shadow: 0 3px 0px #4E3629;
+            transition: all 0.2s ease;
+        }
+        .kawaii-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0px #4E3629;
+        }
+
+        /* 卡片按壓效果 */
+        .active-scale:active {
+            transform: scale(0.98);
+        }
+
+        /* 勾選動畫 */
+        .check-anim {
+            transition: all 0.3s ease;
+        }
+
+        /* ================= 應用 4：加載動畫 (Loading Icon) ================= */
+        @keyframes cuteBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .bouncing-train {
+            animation: cuteBounce 1.2s ease-in-out infinite;
+        }
+        .bouncing-train.delay-1 { animation-delay: 0s; }
+        .bouncing-train.delay-2 { animation-delay: 0.15s; }
+        .bouncing-train.delay-3 { animation-delay: 0.3s; }
+        .bouncing-train.delay-4 { animation-delay: 0.45s; }
+
+        /* ================= 應用 5：Hover 互動微動畫按鈕 ================= */
+        .hover-train-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .hover-train-btn .slide-train {
+            position: absolute;
+            left: -36px;
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .hover-train-btn .btn-text {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        .hover-train-btn:hover {
+            background-color: #FBD76D;
+            color: #4E3629;
+        }
+        .hover-train-btn:hover .slide-train {
+            left: 14px;
+            opacity: 1;
+        }
+        .hover-train-btn:hover .btn-text {
+            transform: translateX(12px);
+        }
+    </style>
+</head>
+<body class="text-dark-brown font-sans h-screen flex flex-col overflow-hidden">
+
+    <div id="app" class="h-full flex flex-col relative">
+        
+        <!-- ================= 應用 4：雲端同步/加載畫面 (預留給 Firebase 使用) ================= -->
+        <div v-if="isLoading" class="fixed inset-0 bg-paper-white/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+            <div class="flex space-x-3 border-b-4 border-dashed border-dark-brown pb-2 px-4 mb-3">
+                <img :src="trainIcons.red" @error="handleTrainImgError($event, '#E4776C')" class="w-9 h-9 object-contain bouncing-train delay-1" alt="紅火車">
+                <img :src="trainIcons.yellow" @error="handleTrainImgError($event, '#FBD76D')" class="w-9 h-9 object-contain bouncing-train delay-2" alt="黃火車">
+                <img :src="trainIcons.green" @error="handleTrainImgError($event, '#92C889')" class="w-9 h-9 object-contain bouncing-train delay-3" alt="綠火車">
+                <img :src="trainIcons.blue" @error="handleTrainImgError($event, '#6EA2CE')" class="w-9 h-9 object-contain bouncing-train delay-4" alt="藍火車">
+            </div>
+            <p class="font-bold text-dark-brown tracking-wider text-sm">小火車載入行程中...</p>
+        </div>
+
+        <!-- ================= 頂部 Toast 提示訊息 (取代 alert) ================= -->
+        <transition name="fade">
+            <div v-if="toastMessage" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-dark-brown text-paper-white px-5 py-2.5 rounded-full shadow-lg text-sm font-bold flex items-center space-x-2 border-2 border-sunset-yellow">
+                <img :src="trainIcons.yellow" @error="handleTrainImgError($event, '#FBD76D')" class="w-5 h-5 object-contain">
+                <span>{{ toastMessage }}</span>
+            </div>
+        </transition>
+
+        <!-- ================= 頁首區塊 ================= -->
+        <header class="relative shrink-0 z-20">
+            <!-- 圖片容器 -->
+            <div class="header-curve h-48 md:h-64 relative bg-sea-blue cursor-pointer" @click="openBannerModal">
+                <img :src="bannerImage" @error="handleBannerError" class="w-full h-full object-cover" alt="Busan Banner">
+                <div class="absolute inset-0 bg-gradient-to-t from-dark-brown/45 via-transparent to-transparent"></div>
+                <div class="absolute bottom-6 left-5 text-white drop-shadow-[0_2px_4px_rgba(78,54,41,0.8)]">
+                    <h1 class="text-2xl font-bold tracking-widest flex items-center">
+                        釜山の旅 🌊
+                    </h1>
+                    <p class="text-xs md:text-sm font-medium opacity-95 mt-0.5">2027.04.15 - 04.19 · Candice / Carmen / Christy / Tung</p>
+                </div>
+            </div>
+
+            <!-- 浮動分頁選單 (Tab Buttons) -->
+            <div class="absolute -bottom-6 right-2 md:right-4 flex space-x-2 overflow-x-auto px-2 py-1 max-w-full no-scrollbar">
+                <button 
+                    v-for="tab in tabs" 
+                    :key="tab.id"
+                    @click="currentTab = tab.id"
+                    :class="[
+                        'w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 transform flex-shrink-0 border-2 border-dark-brown',
+                        currentTab === tab.id ? 'bg-sky-blue text-white -translate-y-1.5 scale-105 shadow-[0_3px_0_#4E3629]' : 'bg-white text-warm-gray hover:bg-sea-blue shadow-sm'
+                    ]"
+                    :title="tab.label"
+                >
+                    <i :class="tab.icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ================= 主要內容區 ================= -->
+        <main class="flex-1 overflow-y-auto no-scrollbar pt-10 pb-24 px-4 bg-paper-white relative z-10">
+            
+            <!-- 1. 每日行程表 Tab -->
+            <div v-if="currentTab === 'itinerary'" class="space-y-4">
+                
+                <!-- 天氣 Widget (海風淡藍底色) -->
+                <div class="bg-sea-blue/80 border-2 border-dark-brown rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <i :class="getWeatherIcon(currentWeather.condition)" class="text-3xl text-coral-red"></i>
+                        <div>
+                            <div class="text-lg font-bold text-dark-brown">{{ currentWeather.temp }}°C</div>
+                            <div class="text-xs text-warm-gray">體感 {{ currentWeather.feelsLike }}°C</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-bold text-dark-brown flex items-center justify-end space-x-1">
+                            <img :src="trainIcons.blue" @error="handleTrainImgError($event, '#6EA2CE')" class="w-4 h-4 object-contain">
+                            <span>釜山廣域市</span>
+                        </div>
+                        <div class="text-xs text-warm-gray mt-0.5">{{ currentWeather.desc }} (4月春暖)</div>
+                    </div>
+                </div>
+
+                <!-- 橫向日期選擇器 (日落暖黃選中狀態) -->
+                <div class="flex space-x-3 overflow-x-auto no-scrollbar py-2">
+                    <div 
+                        v-for="(day, index) in itineraryData" 
+                        :key="index"
+                        @click="selectedDayIndex = index"
+                        :class="[
+                            'flex-shrink-0 flex flex-col items-center justify-center w-16 h-20 rounded-2xl transition-all cursor-pointer border-2 border-dark-brown',
+                            selectedDayIndex === index ? 'bg-sunset-yellow text-dark-brown shadow-[0_3px_0_#4E3629] -translate-y-0.5' : 'bg-white text-warm-gray hover:bg-sea-blue/40'
+                        ]"
+                    >
+                        <span class="text-xs font-bold uppercase">{{ getDayOfWeek(day.date) }}</span>
+                        <span class="text-2xl font-bold">{{ getDayDate(day.date) }}</span>
+                    </div>
+                </div>
+
+                <!-- 行程列表 (應用 1：小火車時間軸路線標記) -->
+                <div class="space-y-4 pb-16">
+                    <div v-if="currentDayEvents.length === 0" class="kawaii-card rounded-2xl text-center py-10 px-4">
+                        <div class="flex justify-center space-x-2 mb-3">
+                            <img :src="trainIcons.red" @error="handleTrainImgError($event, '#E4776C')" class="w-8 h-8 object-contain">
+                            <img :src="trainIcons.yellow" @error="handleTrainImgError($event, '#FBD76D')" class="w-8 h-8 object-contain">
+                            <img :src="trainIcons.green" @error="handleTrainImgError($event, '#92C889')" class="w-8 h-8 object-contain">
+                            <img :src="trainIcons.blue" @error="handleTrainImgError($event, '#6EA2CE')" class="w-8 h-8 object-contain">
+                        </div>
+                        <p class="font-bold text-dark-brown">今天還沒有安排行程喔～</p>
+                        <p class="text-xs text-warm-gray mt-1">點擊右下角「+」號開始規劃釜山之旅！</p>
+                    </div>
+
+                    <div v-for="(event, index) in currentDayEvents" :key="event.id" class="relative group">
+                        
+                        <!-- 交通時間連接線 -->
+                        <div v-if="index > 0 || event.travelTime" class="flex items-center justify-center py-2 text-xs text-warm-gray font-medium space-x-2">
+                             <i :class="event.transport === 'walk' ? 'fa-solid fa-person-walking text-forest-green' : 'fa-solid fa-train-subway text-sky-blue'"></i>
+                             <span>{{ event.travelTime || '15 min' }}</span>
+                        </div>
+
+                        <!-- 行程卡片 -->
+                        <div 
+                            class="kawaii-card rounded-2xl p-4 border-l-8 active-scale transition-transform relative overflow-hidden cursor-pointer"
+                            :class="getCategoryBorderColor(event.type)"
+                            @click="openNaverMap(event.naverQuery || event.name)"
+                        >
+                            <!-- 航班樣式 -->
+                            <div v-if="event.type === 'flight'" class="flex justify-between items-center">
+                                <div class="flex items-center space-x-3">
+                                    <img :src="getTrainByCategory('flight')" class="w-8 h-8 object-contain shrink-0">
+                                    <div>
+                                        <div class="font-bold text-lg text-dark-brown">{{ event.name }}</div>
+                                        <div class="text-sm text-warm-gray font-mono">{{ event.time }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-xs bg-coral-red text-white px-2.5 py-1 rounded-full font-bold border border-dark-brown">FLIGHT</div>
+                            </div>
+
+                            <!-- 一般行程樣式 -->
+                            <div v-else class="flex items-start space-x-3">
+                                <!-- 應用 1：依分類顯示對應膠囊小火車 -->
+                                <img :src="getTrainByCategory(event.type)" class="w-8 h-8 object-contain shrink-0 mt-0.5">
+                                
+                                <div class="flex-1 pr-6">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h3 class="font-bold text-lg text-dark-brown leading-snug">{{ event.name }}</h3>
+                                        <span class="text-xs font-mono font-bold bg-sea-blue text-dark-brown px-2 py-0.5 rounded-lg border border-dark-brown/30 ml-2 shrink-0">{{ event.time }}</span>
+                                    </div>
+                                    
+                                    <!-- Naver Map 地址 / 關鍵字顯示 -->
+                                    <div v-if="event.naverQuery" class="text-xs text-dark-brown/80 mt-1 flex items-center">
+                                        <i class="fa-solid fa-location-dot text-forest-green mr-1.5 shrink-0"></i>
+                                        <span class="truncate">{{ event.naverQuery }}</span>
+                                    </div>
+
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mt-2 text-xs text-warm-gray">
+                                        <span v-if="event.note" class="flex items-center bg-paper-white px-2 py-1 rounded-lg border border-dark-brown/20">
+                                            <i class="fa-solid fa-circle-info mr-1 text-sky-blue"></i> {{ event.note }}
+                                        </span>
+                                        <span v-else></span>
+
+                                        <!-- Naver Map 快速跳轉徽章 -->
+                                        <span class="inline-flex items-center bg-[#03C75A]/15 text-[#029E47] border border-[#03C75A]/40 font-bold px-2 py-0.5 rounded-full text-[11px] ml-auto">
+                                            <span class="font-black mr-1">N</span> Naver Map 導航
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <button @click.stop="editEvent(index)" class="absolute top-2.5 right-2.5 p-2 text-warm-gray hover:text-dark-brown">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 上下移動順序按鈕 -->
+                        <div class="absolute -right-2 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button v-if="index > 0" @click.stop="moveEvent(index, -1)" class="w-6 h-6 bg-white border border-dark-brown rounded-full shadow text-dark-brown text-xs"><i class="fa-solid fa-arrow-up"></i></button>
+                            <button v-if="index < currentDayEvents.length - 1" @click.stop="moveEvent(index, 1)" class="w-6 h-6 bg-white border border-dark-brown rounded-full shadow text-dark-brown text-xs"><i class="fa-solid fa-arrow-down"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 浮動新增行程按鈕 (復古天藍) -->
+                <button @click="openNewEventModal" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- 2. 資訊 Tab (自動網路匯率 + 可編輯航班住宿 + 韓國緊急電話) -->
+            <div v-if="currentTab === 'info'" class="space-y-6 pb-10">
+                
+                <!-- 韓元自動匯率換算器 (應用 3：區塊標題小火車裝飾) -->
+                <section class="kawaii-card rounded-2xl p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-dark-brown flex items-center">
+                            <img :src="trainIcons.yellow" @error="handleTrainImgError($event, '#FBD76D')" class="w-6 h-6 object-contain mr-2">
+                            韓元即時匯率換算
+                        </h3>
+                        <button @click="fetchLiveRate(true)" class="text-xs bg-sea-blue hover:bg-sunset-yellow text-dark-brown font-bold px-2.5 py-1 rounded-full border border-dark-brown flex items-center space-x-1 transition-colors">
+                            <i class="fa-solid fa-arrows-rotate" :class="{'fa-spin': isFetchingRate}"></i>
+                            <span>更新匯率</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center space-x-2 bg-paper-white border-2 border-dark-brown/20 rounded-xl p-3">
+                        <div class="flex-1">
+                            <label class="text-xs text-warm-gray font-bold block">韓元 (KRW ₩)</label>
+                            <input type="number" v-model="calcKrw" class="w-full bg-transparent font-bold text-xl text-dark-brown outline-none mt-0.5" placeholder="10000">
+                        </div>
+                        <i class="fa-solid fa-arrow-right text-sky-blue text-lg"></i>
+                        <div class="flex-1 text-right">
+                            <label class="text-xs text-warm-gray font-bold block">港幣 (HKD $)</label>
+                            <div class="font-bold text-xl text-coral-red mt-0.5">
+                                ${{ calcKrw ? (calcKrw * exchangeRate).toFixed(1) : '0.0' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 匯率顯示與手動微調 -->
+                    <div class="flex justify-between items-center text-xs text-warm-gray mt-2.5 pt-2 border-t border-dashed border-dark-brown/20">
+                        <span>{{ rateStatusText }}</span>
+                        <div class="flex items-center space-x-1">
+                            <span>1 KRW =</span>
+                            <input type="number" step="0.0001" v-model.number="exchangeRate" @change="saveManualRate" class="w-16 bg-sea-blue/60 text-dark-brown font-bold text-center rounded px-1 py-0.5 border border-dark-brown/30 outline-none">
+                            <span>HKD</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 航班資訊 (可自由新增編輯) -->
+                <section class="kawaii-card rounded-2xl p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-dark-brown flex items-center">
+                            <img :src="trainIcons.red" @error="handleTrainImgError($event, '#E4776C')" class="w-6 h-6 object-contain mr-2">
+                            航班資訊
+                        </h3>
+                        <button @click="showFlightModal = true" class="text-xs bg-sunset-yellow text-dark-brown font-bold px-2.5 py-1 rounded-full border border-dark-brown">
+                            + 新增航班
+                        </button>
+                    </div>
+
+                    <div v-if="flightList.length === 0" class="text-center py-6 bg-paper-white rounded-xl border border-dashed border-dark-brown/30 text-xs text-warm-gray">
+                        尚未輸入釜山機票資料，買好機票後可按右上角新增 ✈️
+                    </div>
+
+                    <div v-else class="space-y-3">
+                        <div v-for="(flight, idx) in flightList" :key="idx" class="bg-paper-white p-3.5 rounded-xl border border-dark-brown/20 relative">
+                            <button @click="deleteFlight(idx)" class="absolute top-2 right-2 text-warm-gray hover:text-coral-red text-xs p-1"><i class="fa-solid fa-times"></i></button>
+                            <div class="flex justify-between font-bold text-sm text-sky-blue pr-5">
+                                <span>{{ flight.label }}</span>
+                                <span class="bg-white px-2 py-0.5 rounded border border-dark-brown/20 text-dark-brown">{{ flight.code }}</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-2">
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-dark-brown">{{ flight.depTime }}</div>
+                                    <div class="text-xs text-warm-gray font-bold">{{ flight.depAirport }}</div>
+                                </div>
+                                <div class="flex flex-col items-center justify-center px-2">
+                                    <i class="fa-solid fa-plane text-coral-red"></i>
+                                    <div class="text-[11px] text-warm-gray mt-0.5">{{ flight.duration }}</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-xl font-bold text-dark-brown">{{ flight.arrTime }}</div>
+                                    <div class="text-xs text-warm-gray font-bold">{{ flight.arrAirport }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 住宿資訊 (可自由新增編輯) -->
+                <section class="kawaii-card rounded-2xl p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-dark-brown flex items-center">
+                            <img :src="trainIcons.blue" @error="handleTrainImgError($event, '#6EA2CE')" class="w-6 h-6 object-contain mr-2">
+                            住宿資訊
+                        </h3>
+                        <button @click="showHotelModal = true" class="text-xs bg-sunset-yellow text-dark-brown font-bold px-2.5 py-1 rounded-full border border-dark-brown">
+                            + 新增住宿
+                        </button>
+                    </div>
+
+                    <div v-if="hotelList.length === 0" class="text-center py-6 bg-paper-white rounded-xl border border-dashed border-dark-brown/30 text-xs text-warm-gray">
+                        尚未輸入釜山飯店資料（如海雲台 / 西面住宿），可按右上角新增 🏨
+                    </div>
+
+                    <ul v-else class="space-y-3 text-sm">
+                        <li v-for="(hotel, idx) in hotelList" :key="idx" class="bg-sea-blue/50 p-3.5 rounded-xl border border-dark-brown/30 active-scale transition-transform relative cursor-pointer" @click="openNaverMap(hotel.address || hotel.name)">
+                            <button @click.stop="deleteHotel(idx)" class="absolute top-2.5 right-2.5 text-warm-gray hover:text-coral-red text-xs p-1"><i class="fa-solid fa-times"></i></button>
+                            <div class="font-bold text-dark-brown text-base pr-6">{{ hotel.name }}</div>
+                            <div class="text-xs text-sky-blue font-bold mt-1"><i class="fa-regular fa-calendar mr-1"></i> {{ hotel.dates }}</div>
+                            <div class="flex justify-between items-center text-xs text-warm-gray mt-1">
+                                <div class="space-x-3">
+                                    <span>Check-in: {{ hotel.checkIn }}</span>
+                                    <span>Check-out: {{ hotel.checkOut }}</span>
+                                </div>
+                                <span class="inline-flex items-center bg-[#03C75A]/15 text-[#029E47] border border-[#03C75A]/40 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                                    <span class="font-black mr-1">N</span> Naver Map
+                                </span>
+                            </div>
+                            <div v-if="hotel.address" class="text-xs text-dark-brown/80 mt-2 flex items-start bg-white/70 p-1.5 rounded-lg">
+                                <i class="fa-solid fa-location-dot mt-0.5 mr-1.5 text-coral-red"></i>
+                                <span>{{ hotel.address }}</span>
+                            </div>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- 釜山觀光與緊急醫療 (應用 2：路線與狀態指示) -->
+                <section class="kawaii-card rounded-2xl p-5 bg-coral-red/10">
+                    <h3 class="font-bold text-coral-red mb-3 flex items-center">
+                        <i class="fa-solid fa-triangle-exclamation mr-2"></i> 韓國緊急與觀光熱線
+                    </h3>
+                    <div class="grid grid-cols-3 gap-2.5 text-center">
+                        <a href="tel:112" class="bg-white p-2.5 rounded-xl border border-dark-brown/30 block active-scale">
+                            <i class="fa-solid fa-user-shield text-xl text-sky-blue mb-1"></i>
+                            <div class="text-xs font-bold text-dark-brown">報警 112</div>
+                        </a>
+                        <a href="tel:119" class="bg-white p-2.5 rounded-xl border border-dark-brown/30 block active-scale">
+                            <i class="fa-solid fa-truck-medical text-xl text-coral-red mb-1"></i>
+                            <div class="text-xs font-bold text-dark-brown">救護 119</div>
+                        </a>
+                        <a href="tel:1330" class="bg-white p-2.5 rounded-xl border border-dark-brown/30 block active-scale">
+                            <i class="fa-solid fa-headset text-xl text-forest-green mb-1"></i>
+                            <div class="text-xs font-bold text-dark-brown">觀光 1330</div>
+                        </a>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 3. 購物清單 Tab -->
+            <div v-if="currentTab === 'shopping'" class="pb-20">
+                <div v-if="shoppingList.length === 0" class="kawaii-card rounded-2xl text-center py-12 px-4">
+                    <img :src="trainIcons.yellow" @error="handleTrainImgError($event, '#FBD76D')" class="w-10 h-10 object-contain mx-auto mb-2">
+                    <p class="font-bold text-dark-brown">釜山必買清單還是空的喔！</p>
+                    <p class="text-xs text-warm-gray mt-1">Olive Young 美妝、伴手禮都可以先記在這裡～</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div v-for="(item, index) in shoppingList" :key="index" class="kawaii-card rounded-2xl p-3 flex flex-col relative group">
+                        <button @click="deleteShoppingItem(index)" class="absolute top-2 right-2 bg-coral-red text-white border border-dark-brown w-6 h-6 rounded-full flex items-center justify-center text-xs z-10"><i class="fa-solid fa-times"></i></button>
+                        
+                        <div class="aspect-square bg-paper-white rounded-xl mb-2 overflow-hidden flex items-center justify-center border border-dark-brown/15">
+                            <img v-if="item.image" :src="item.image" class="w-full h-full object-cover">
+                            <i v-else class="fa-solid fa-bag-shopping text-sky-blue/40 text-3xl"></i>
+                        </div>
+                        <div class="font-bold text-sm text-center text-dark-brown">{{ item.name }}</div>
+                        <div class="text-xs text-center mt-1.5 cursor-pointer py-1 rounded-full border" 
+                             :class="item.bought ? 'bg-forest-green/20 border-forest-green text-dark-brown font-bold' : 'bg-gray-50 border-gray-200 text-warm-gray'"
+                             @click="toggleBought(index)">
+                            <i :class="item.bought ? 'fa-solid fa-check-circle text-forest-green' : 'fa-regular fa-circle text-warm-gray'"></i> 
+                            {{ item.bought ? '已購入' : '未買' }}
+                        </div>
+                    </div>
+                </div>
+
+                <button @click="showAddShopModal = true" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- 4. 公費記帳與自動分攤 Tab (重點升級功能) -->
+            <div v-if="currentTab === 'expenses'" class="pb-20 space-y-5">
+                
+                <!-- 頂部總覽與公費餘額卡片 -->
+                <div class="bg-sky-blue text-white rounded-3xl p-6 border-2 border-dark-brown shadow-[0_4px_0_#4E3629] relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-xs font-bold opacity-90 flex items-center">
+                                <img :src="trainIcons.yellow" @error="handleTrainImgError($event, '#FBD76D')" class="w-5 h-5 object-contain mr-1.5">
+                                旅程總花費 (KRW)
+                            </div>
+                            <div class="text-3xl font-bold mt-1 tracking-tight">₩{{ totalExpenses.toLocaleString() }}</div>
+                            <div class="text-xs opacity-90 mt-0.5">約 HKD ${{ (totalExpenses * exchangeRate).toFixed(0) }}</div>
+                        </div>
+                        <button @click="showPoolModal = true" class="bg-sunset-yellow text-dark-brown text-xs font-bold px-3 py-1.5 rounded-full border-2 border-dark-brown shadow-sm active-scale">
+                            設定公費池
+                        </button>
+                    </div>
+
+                    <!-- 公費池狀態條 -->
+                    <div class="mt-4 pt-3 border-t border-white/30 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="opacity-85">公費池總額：</span>
+                            <span class="font-bold">₩{{ commonPoolTotal.toLocaleString() }}</span>
+                        </div>
+                        <div>
+                            <span class="opacity-85">公費剩餘：</span>
+                            <span class="font-bold px-2 py-0.5 rounded-full" :class="commonPoolRemaining >= 0 ? 'bg-forest-green text-dark-brown' : 'bg-coral-red text-white'">
+                                ₩{{ commonPoolRemaining.toLocaleString() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自動分帳結算面板 (Candice / Carmen / Christy / Tung) -->
+                <div class="kawaii-card rounded-2xl p-4">
+                    <div class="flex justify-between items-center cursor-pointer" @click="showSettlement = !showSettlement">
+                        <h3 class="font-bold text-dark-brown text-sm flex items-center">
+                            <img :src="trainIcons.green" @error="handleTrainImgError($event, '#92C889')" class="w-5 h-5 object-contain mr-2">
+                            四人代墊自動結算表
+                        </h3>
+                        <span class="text-xs text-sky-blue font-bold">
+                            {{ showSettlement ? '收起 ▲' : '展開結算 ▼' }}
+                        </span>
+                    </div>
+
+                    <div v-if="showSettlement" class="mt-3 pt-3 border-t border-dashed border-dark-brown/20 space-y-3">
+                        <!-- 每人淨收支概況 -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div v-for="member in members" :key="member" class="bg-paper-white p-2.5 rounded-xl border border-dark-brown/15 flex justify-between items-center text-xs">
+                                <span class="font-bold text-dark-brown">{{ member }}</span>
+                                <span class="font-mono font-bold" :class="memberBalances[member] >= 0 ? 'text-forest-green' : 'text-coral-red'">
+                                    {{ memberBalances[member] >= 0 ? '+' : '' }}₩{{ Math.round(memberBalances[member]).toLocaleString() }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 最佳轉帳建議 -->
+                        <div class="bg-sea-blue/60 p-3 rounded-xl border border-dark-brown/20">
+                            <div class="text-xs font-bold text-dark-brown mb-2">💡 結算轉帳建議（最簡化筆數）：</div>
+                            <div v-if="settlementPlan.length === 0" class="text-xs text-warm-gray text-center py-2">
+                                目前所有個人代墊帳目已扯平，無需轉帳！✨
+                            </div>
+                            <div v-else class="space-y-1.5">
+                                <div v-for="(tx, idx) in settlementPlan" :key="idx" class="flex justify-between items-center text-xs bg-white px-3 py-2 rounded-lg border border-dark-brown/15">
+                                    <div>
+                                        <span class="font-bold text-coral-red">{{ tx.from }}</span>
+                                        <span class="mx-1.5 text-warm-gray">給</span>
+                                        <span class="font-bold text-sky-blue">{{ tx.to }}</span>
+                                    </div>
+                                    <div class="text-right font-mono">
+                                        <div class="font-bold text-dark-brown">₩{{ tx.amount.toLocaleString() }}</div>
+                                        <div class="text-[10px] text-warm-gray">≈ HKD ${{ (tx.amount * exchangeRate).toFixed(1) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 複製結算明細按鈕 (應用 5：Hover 微動畫按鈕) -->
+                        <button @click="copySettlementText" class="w-full py-2.5 rounded-xl bg-sea-blue text-dark-brown font-bold text-xs kawaii-btn hover-train-btn flex items-center justify-center">
+                            <img :src="trainIcons.red" @error="handleTrainImgError($event, '#E4776C')" class="slide-train">
+                            <span class="btn-text"><i class="fa-regular fa-copy mr-1"></i> 一鍵複製分帳明細傳至 WhatsApp</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 消費明細列表 -->
+                <div class="kawaii-card rounded-2xl overflow-hidden">
+                    <div class="bg-sea-blue/50 px-4 py-2.5 border-b border-dark-brown/20 flex justify-between items-center">
+                        <span class="text-xs font-bold text-dark-brown">消費紀錄明細 ({{ expenseList.length }} 筆)</span>
+                        <button @click="backupData" class="text-[11px] text-warm-gray underline">備份/還原</button>
+                    </div>
+
+                    <div v-if="expenseList.length === 0" class="p-8 text-center text-xs text-warm-gray">
+                        還沒有記帳紀錄，按右下角「+」開始記帳吧！
+                    </div>
+
+                    <div v-for="(exp, index) in expenseList" :key="index" class="p-4 border-b border-dark-brown/10 flex justify-between items-start last:border-0 hover:bg-paper-white/60 transition-colors">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-paper-white border border-dark-brown/30 flex items-center justify-center text-sky-blue shrink-0 mt-0.5">
+                                <i :class="getCategoryIcon(exp.category)"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm text-dark-brown flex items-center flex-wrap gap-1.5">
+                                    <span>{{ exp.name }}</span>
+                                    <!-- 付款來源標籤 -->
+                                    <span v-if="exp.payer === 'POOL'" class="text-[10px] bg-sunset-yellow text-dark-brown px-2 py-0.5 rounded-full border border-dark-brown/40">
+                                        公費支付
+                                    </span>
+                                    <span v-else class="text-[10px] bg-sky-blue/20 text-dark-brown px-2 py-0.5 rounded-full border border-sky-blue/40">
+                                        {{ exp.payer }} 先付
+                                    </span>
+                                </div>
+                                <div class="text-xs text-warm-gray mt-1">
+                                    {{ exp.date }} · {{ exp.method === 'cash' ? '現金' : '信用卡/WOWPASS' }}
+                                </div>
+                                <div v-if="exp.payer !== 'POOL' && exp.splitAmong" class="text-[11px] text-sky-blue font-medium mt-0.5">
+                                    分攤 ({{ exp.splitAmong.length }}人)：{{ exp.splitAmong.join(', ') }}
+                                </div>
+                                <div v-if="exp.note" class="text-xs text-warm-gray mt-1 bg-paper-white px-2 py-0.5 rounded border border-dark-brown/10">
+                                    {{ exp.note }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0 ml-2">
+                            <div class="font-bold font-mono text-dark-brown">₩{{ parseInt(exp.amount).toLocaleString() }}</div>
+                            <div class="text-[10px] text-warm-gray font-mono">≈ ${{ (exp.amount * exchangeRate).toFixed(1) }}</div>
+                            <button @click="deleteExpense(index)" class="text-xs text-coral-red/70 hover:text-coral-red mt-1.5 inline-block"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 浮動記帳按鈕 -->
+                <button @click="openNewExpenseModal" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- 5. 行李清單 Tab -->
+            <div v-if="currentTab === 'packing'" class="pb-20">
+                <div class="kawaii-card rounded-2xl p-4 mb-5">
+                    <div class="flex items-center justify-center space-x-2 text-dark-brown font-bold mb-2">
+                        <img :src="trainIcons.green" @error="handleTrainImgError($event, '#92C889')" class="w-5 h-5 object-contain">
+                        <span>行李準備進度</span>
+                    </div>
+                    <div class="w-full bg-paper-white border border-dark-brown/30 rounded-full h-3 overflow-hidden">
+                        <div class="bg-sky-blue h-full rounded-full transition-all duration-500" :style="{ width: packingProgress + '%' }"></div>
+                    </div>
+                    <div class="text-right text-xs font-bold text-sky-blue mt-1">{{ packingProgress }}%</div>
+                </div>
+
+                <div v-for="type in ['carry_on', 'checked']" :key="type" class="mb-6">
+                    <h3 class="font-bold text-dark-brown mb-3 flex items-center">
+                        <i :class="type === 'carry_on' ? 'fa-briefcase text-coral-red' : 'fa-suitcase-rolling text-sky-blue'" class="fa-solid mr-2"></i>
+                        {{ type === 'carry_on' ? '隨身行李' : '行李箱 (託運)' }}
+                    </h3>
+                    
+                    <div class="kawaii-card rounded-2xl overflow-hidden">
+                        <div v-if="getPackingListByType(type).length === 0" class="p-4 text-center text-warm-gray text-xs">
+                            還沒有新增物品喔～
+                        </div>
+                        <div 
+                            v-for="item in getPackingListByType(type)" 
+                            :key="item.id" 
+                            class="p-3.5 border-b border-dark-brown/10 flex items-center justify-between last:border-0 hover:bg-paper-white/60 transition-colors cursor-pointer"
+                            @click="togglePacked(item)"
+                        >
+                            <div class="flex items-center space-x-3">
+                                <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors"
+                                     :class="item.packed ? 'bg-forest-green border-dark-brown' : 'border-dark-brown/40 bg-white'">
+                                    <i v-if="item.packed" class="fa-solid fa-check text-dark-brown text-xs"></i>
+                                </div>
+                                <span :class="{'line-through text-warm-gray': item.packed, 'text-dark-brown font-medium': !item.packed}" class="check-anim">
+                                    {{ item.name }}
+                                </span>
+                            </div>
+                            <button @click.stop="deletePackingItem(item.id)" class="text-warm-gray hover:text-coral-red p-1.5">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button @click="showAddPackingModal = true" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- 6. 店舖清單 Tab -->
+            <div v-if="currentTab === 'stores'" class="pb-20">
+                <div class="space-y-4">
+                    <div v-if="storeList.length === 0" class="kawaii-card rounded-2xl text-center py-12 px-4">
+                        <img :src="trainIcons.red" class="w-10 h-10 object-contain mx-auto mb-2">
+                        <p class="font-bold text-dark-brown">還沒有收藏釜山美食或店舖喔～</p>
+                        <p class="text-xs text-warm-gray mt-1">點擊右下角「+」儲存韓文地址，一鍵跳轉 Naver Map！</p>
+                    </div>
+
+                    <div v-for="(store, index) in storeList" :key="index" class="kawaii-card rounded-2xl p-4 relative active-scale transition-transform border-l-8 cursor-pointer" :class="store.type === 'food' ? 'border-coral-red' : 'border-sunset-yellow'" @click="openNaverMap(store.address || store.name)">
+                        <div class="flex justify-between items-start pr-8">
+                            <h3 class="font-bold text-lg text-dark-brown flex items-center">
+                                <img :src="store.type === 'food' ? trainIcons.red : trainIcons.yellow" class="w-6 h-6 object-contain mr-2">
+                                {{ store.name }}
+                            </h3>
+                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-dark-brown text-dark-brown" :class="store.type === 'food' ? 'bg-coral-red/30' : 'bg-sunset-yellow'">
+                                {{ store.type === 'food' ? '美食' : '購物' }}
+                            </span>
+                        </div>
+                        
+                        <div class="text-xs text-warm-gray mt-2.5 space-y-1.5">
+                            <div v-if="store.address" class="flex items-start justify-between gap-2">
+                                <div class="flex items-start">
+                                    <i class="fa-solid fa-location-dot mt-0.5 mr-1.5 text-coral-red w-3 shrink-0"></i>
+                                    <span>{{ store.address }}</span>
+                                </div>
+                                <span class="inline-flex items-center bg-[#03C75A]/15 text-[#029E47] border border-[#03C75A]/40 font-bold px-2 py-0.5 rounded-full text-[10px] shrink-0">
+                                    <span class="font-black mr-1">N</span> 導航
+                                </span>
+                            </div>
+                            <div v-if="store.hours" class="flex items-center">
+                                <i class="fa-regular fa-clock mr-1.5 text-sky-blue w-3"></i>
+                                <span>{{ store.hours }}</span>
+                            </div>
+                            <div v-if="store.note" class="flex items-start bg-paper-white p-2 rounded-lg border border-dark-brown/15 mt-1 text-dark-brown">
+                                <i class="fa-solid fa-sticky-note mt-0.5 mr-1.5 text-forest-green w-3"></i>
+                                <span>{{ store.note }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 編輯按鈕 -->
+                        <button @click.stop="editStore(index)" class="absolute top-3 right-3 p-2 text-warm-gray hover:text-dark-brown">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 新增店舖按鈕 -->
+                <button @click="showAddStoreModal = true; isEditingStore = false; newStore = { name: '', address: '', hours: '', type: 'food', note: '' }" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+        </main>
+
+        <!-- ================= Modals (彈出視窗) ================= -->
+        
+        <!-- 1. 新增/編輯行程 Modal -->
+        <div v-if="showAddEventModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
+                <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">{{ isEditing ? '編輯行程' : '新增釜山行程' }}</h3>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">景點 / 活動名稱</label>
+                        <input v-model="newEvent.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-sky-blue" placeholder="例: 海雲台藍線公園膠囊列車">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray flex items-center justify-between">
+                            <span>Naver Map 地址 / 韓文店名 / 分享連結</span>
+                            <span class="text-[10px] text-[#029E47] font-bold">支援 naver.me 連結</span>
+                        </label>
+                        <input v-model="newEvent.naverQuery" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-[#03C75A] text-xs" placeholder="貼上韓文地址、韓文店名或 https://naver.me/...">
+                    </div>
+                    <div class="flex space-x-2">
+                         <div class="flex-1">
+                            <label class="text-xs font-bold text-warm-gray">分類 (對應小火車)</label>
+                            <select v-model="newEvent.type" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none">
+                                <option value="sight">🟡 景點</option>
+                                <option value="food">🟢 美食</option>
+                                <option value="shop">🟡 購物</option>
+                                <option value="hotel">🔵 住宿</option>
+                                <option value="flight">🔴 航班 / 交通</option>
+                                <option value="other">🟢 其他</option>
+                            </select>
+                         </div>
+                         <div class="flex-1">
+                            <label class="text-xs font-bold text-warm-gray">時間</label>
+                            <input type="time" v-model="newEvent.time" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none">
+                         </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">交通方式與時間</label>
+                         <div class="flex space-x-2 mt-1">
+                            <select v-model="newEvent.transport" class="bg-white border border-dark-brown/30 rounded-xl p-2.5 text-sm outline-none">
+                                <option value="train">地鐵 / 巴士</option>
+                                <option value="walk">步行</option>
+                            </select>
+                            <input v-model="newEvent.travelTime" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="例: 20 min">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">備註 / 預約資訊</label>
+                        <textarea v-model="newEvent.note" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="備註..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2 mt-6">
+                    <button @click="showAddEventModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button v-if="isEditing" @click="confirmDeleteEvent" class="flex-1 bg-coral-red text-white border-2 border-dark-brown py-2.5 rounded-xl font-bold"><i class="fa-solid fa-trash"></i> 刪除</button>
+                    <button @click="saveEvent" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn hover-train-btn">
+                        <img :src="trainIcons.yellow" @error="handleTrainImgError($event, '#FBD76D')" class="slide-train">
+                        <span class="btn-text">儲存</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 新增購物 Modal -->
+        <div v-if="showAddShopModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
+                <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">想在釜山買什麼？</h3>
+                <input v-model="newShopItem.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-3 mb-4 outline-none" placeholder="商品名稱 (例: 膠原蛋白果凍)">
+                
+                <label class="block w-full bg-white rounded-xl p-6 text-center border-2 border-dashed border-dark-brown/40 cursor-pointer mb-4 hover:bg-sea-blue/30 transition-colors">
+                    <i class="fa-solid fa-camera text-2xl text-sky-blue mb-2"></i>
+                    <div class="text-xs font-bold text-warm-gray">上傳參考圖片 (手機相簿)</div>
+                    <input type="file" @change="handleImageUpload" class="hidden" accept="image/*">
+                    <img v-if="newShopItem.image" :src="newShopItem.image" class="mt-2 h-24 mx-auto object-cover rounded-lg border border-dark-brown/20">
+                </label>
+
+                <div class="flex space-x-2">
+                    <button @click="showAddShopModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button @click="saveShopItem" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn">加入清單</button>
+                </div>
+             </div>
+        </div>
+
+        <!-- 3. 新增花費 / 公費分帳 Modal -->
+        <div v-if="showAddExpenseModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl my-auto">
+                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">新增花費 / 分帳</h3>
+                 <div class="space-y-3">
+                    <div class="flex space-x-2">
+                        <div class="flex-1">
+                            <label class="text-xs font-bold text-warm-gray">分類</label>
+                            <select v-model="newExpense.category" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
+                                <option value="food">飲食</option>
+                                <option value="transport">交通</option>
+                                <option value="shopping">購物</option>
+                                <option value="ticket">門票</option>
+                                <option value="hotel">住宿</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-xs font-bold text-warm-gray">日期</label>
+                            <input type="date" v-model="newExpense.date" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">消費項目</label>
+                        <input v-model="newExpense.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none" placeholder="例: 伍班長烤肉">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">金額 (韓元 KRW ₩)</label>
+                        <input type="number" v-model="newExpense.amount" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 font-bold text-lg font-mono outline-none" placeholder="₩ 50000">
+                        <div v-if="newExpense.amount" class="text-right text-xs text-sky-blue font-bold mt-1">
+                            約折合 HKD ${{ (newExpense.amount * exchangeRate).toFixed(1) }}
+                        </div>
+                    </div>
+                    
+                    <!-- 付款來源選擇 (公費池 vs 個人代墊) -->
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray block mb-1">誰先付款？</label>
+                        <div class="grid grid-cols-3 gap-1.5 text-xs font-bold">
+                            <button type="button" @click="newExpense.payer = 'POOL'" 
+                                :class="newExpense.payer === 'POOL' ? 'bg-sunset-yellow text-dark-brown border-dark-brown' : 'bg-white text-warm-gray border-dark-brown/20'"
+                                class="py-2 rounded-xl border-2 transition-all">
+                                💰 公費池
+                            </button>
+                            <button v-for="m in members" :key="m" type="button" @click="newExpense.payer = m"
+                                :class="newExpense.payer === m ? 'bg-sky-blue text-white border-dark-brown' : 'bg-white text-warm-gray border-dark-brown/20'"
+                                class="py-2 rounded-xl border-2 transition-all">
+                                {{ m }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 若為個人代墊，可勾選參與分攤成員 -->
+                    <div v-if="newExpense.payer !== 'POOL'" class="bg-sea-blue/50 p-3 rounded-xl border border-dark-brown/20">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-xs font-bold text-dark-brown">分攤成員：</label>
+                            <button type="button" @click="selectAllMembers" class="text-[11px] text-sky-blue font-bold underline">全選 4 人</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 text-xs">
+                            <label v-for="m in members" :key="m" class="flex items-center space-x-2 bg-white px-2.5 py-1.5 rounded-lg border border-dark-brown/15 cursor-pointer">
+                                <input type="checkbox" :value="m" v-model="newExpense.splitAmong" class="accent-sky-blue">
+                                <span class="font-bold text-dark-brown">{{ m }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 支付方式 -->
+                    <div class="flex space-x-2 text-xs font-bold">
+                        <label class="flex-1 bg-white p-2.5 rounded-xl border-2 flex items-center justify-center cursor-pointer" :class="newExpense.method === 'cash' ? 'border-dark-brown bg-sunset-yellow/40' : 'border-dark-brown/20 text-warm-gray'">
+                            <input type="radio" v-model="newExpense.method" value="cash" class="hidden"> 💵 現金
+                        </label>
+                        <label class="flex-1 bg-white p-2.5 rounded-xl border-2 flex items-center justify-center cursor-pointer" :class="newExpense.method === 'card' ? 'border-dark-brown bg-sunset-yellow/40' : 'border-dark-brown/20 text-warm-gray'">
+                            <input type="radio" v-model="newExpense.method" value="card" class="hidden"> 💳 信用卡 / WOWPASS
+                        </label>
+                    </div>
+
+                    <div>
+                        <input v-model="newExpense.note" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 text-xs outline-none" placeholder="備註 (選填)...">
+                    </div>
+                 </div>
+                 <div class="flex space-x-2 mt-5">
+                    <button @click="showAddExpenseModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button @click="saveExpense" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn">儲存記帳</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.5 設定公費池 Modal -->
+        <div v-if="showPoolModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定四人公費池 💰</h3>
+                <p class="text-xs text-warm-gray text-center mb-4">輸入出發前大家夾錢放入公費的總韓元金額</p>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">每人投入金額 (KRW)</label>
+                        <input type="number" v-model.number="perPersonPoolInput" @input="updateTotalPoolFromPerPerson" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 font-mono font-bold outline-none" placeholder="例: 300000">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">公費池總額 (4人合計 KRW)</label>
+                        <input type="number" v-model.number="commonPoolTotal" class="w-full bg-sea-blue/60 border-2 border-dark-brown rounded-xl p-2.5 mt-1 font-mono font-bold text-lg outline-none">
+                    </div>
+                </div>
+
+                <div class="flex space-x-2 mt-6">
+                    <button @click="savePoolSetting" class="w-full bg-sunset-yellow text-dark-brown py-3 rounded-xl font-bold kawaii-btn">確認更新公費</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 新增行李 Modal -->
+        <div v-if="showAddPackingModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">帶什麼去釜山？</h3>
+                 <div class="space-y-4">
+                    <input v-model="newPackingItem.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-3 outline-none" placeholder="物品名稱 (例: WOWPASS / 轉插)">
+                    
+                    <div class="flex space-x-2">
+                        <label class="flex-1 bg-white p-3 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all border-2" :class="newPackingItem.type === 'carry_on' ? 'border-dark-brown bg-sunset-yellow/50 text-dark-brown' : 'border-dark-brown/20 text-warm-gray'">
+                            <input type="radio" v-model="newPackingItem.type" value="carry_on" class="hidden">
+                            <i class="fa-solid fa-briefcase text-xl mb-1 text-coral-red"></i>
+                            <span class="text-xs font-bold">隨身行李</span>
+                        </label>
+                        <label class="flex-1 bg-white p-3 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all border-2" :class="newPackingItem.type === 'checked' ? 'border-dark-brown bg-sunset-yellow/50 text-dark-brown' : 'border-dark-brown/20 text-warm-gray'">
+                            <input type="radio" v-model="newPackingItem.type" value="checked" class="hidden">
+                            <i class="fa-solid fa-suitcase-rolling text-xl mb-1 text-sky-blue"></i>
+                            <span class="text-xs font-bold">行李箱</span>
+                        </label>
+                    </div>
+                 </div>
+                 <div class="flex space-x-2 mt-6">
+                    <button @click="showAddPackingModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button @click="savePackingItem" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn">加入清單</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 新增/編輯店舖 Modal -->
+        <div v-if="showAddStoreModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">{{ isEditingStore ? '編輯店舖' : '新增釜山店舖' }}</h3>
+                 <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">店名</label>
+                        <input v-model="newStore.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none" placeholder="例: 密陽血腸豬肉湯飯">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray flex items-center justify-between">
+                            <span>地址 / Naver Map 分享連結</span>
+                            <span class="text-[10px] text-[#029E47] font-bold">點擊卡片跳轉 Naver</span>
+                        </label>
+                        <input v-model="newStore.address" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-[#03C75A] text-xs" placeholder="貼上韓文地址或 https://naver.me/...">
+                    </div>
+                    <div class="flex space-x-2">
+                        <div class="flex-1">
+                            <label class="text-xs font-bold text-warm-gray">種類</label>
+                            <select v-model="newStore.type" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
+                                <option value="food">美食</option>
+                                <option value="shop">購物</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-xs font-bold text-warm-gray">營業時間</label>
+                            <input v-model="newStore.hours" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none" placeholder="10:00 - 22:00">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-warm-gray">備註</label>
+                        <textarea v-model="newStore.note" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="必點菜單 / 備註..."></textarea>
+                    </div>
+                 </div>
+                 <div class="flex space-x-2 mt-6">
+                    <button @click="showAddStoreModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button v-if="isEditingStore" @click="confirmDeleteStore" class="flex-1 bg-coral-red text-white border-2 border-dark-brown py-2.5 rounded-xl font-bold"><i class="fa-solid fa-trash"></i> 刪除</button>
+                    <button @click="saveStore" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn">儲存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. 新增航班 Modal -->
+        <div v-if="showFlightModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">新增航班資訊 ✈️</h3>
+                <div class="space-y-3 text-xs">
+                    <div class="flex space-x-2">
+                        <input v-model="newFlight.label" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="例: 去程 (15/4)">
+                        <input v-model="newFlight.code" class="w-28 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="航班號 UO674">
+                    </div>
+                    <div class="flex space-x-2">
+                        <input v-model="newFlight.depAirport" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="出發 HKG">
+                        <input type="time" v-model="newFlight.depTime" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none">
+                    </div>
+                    <div class="flex space-x-2">
+                        <input v-model="newFlight.arrAirport" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="抵達 PUS">
+                        <input type="time" v-model="newFlight.arrTime" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none">
+                    </div>
+                    <input v-model="newFlight.duration" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飛行時間 (例: 3h 25m)">
+                </div>
+                <div class="flex space-x-2 mt-5">
+                    <button @click="showFlightModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button @click="saveFlight" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn">儲存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. 新增住宿 Modal -->
+        <div v-if="showHotelModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">新增住宿資訊 🏨</h3>
+                <div class="space-y-3 text-xs">
+                    <input v-model="newHotel.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飯店名稱 (例: 海雲台新羅舒泰酒店)">
+                    <input v-model="newHotel.dates" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="入住日期 (例: 15/4 - 17/4)">
+                    <div class="flex space-x-2">
+                        <input v-model="newHotel.checkIn" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="In: 15:00">
+                        <input v-model="newHotel.checkOut" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="Out: 11:00">
+                    </div>
+                    <input v-model="newHotel.address" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飯店地址 / 鄰近地鐵站">
+                </div>
+                <div class="flex space-x-2 mt-5">
+                    <button @click="showHotelModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button @click="saveHotel" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn">儲存</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const STORAGE_KEY_PREFIX = 'BUSAN_2027_';
+                const members = ['Candice', 'Carmen', 'Christy', 'Tung'];
+
+                // 精緻還原刺繡章膠囊小火車造型 (含凸起車頂、大車窗、左右側窗、黃色車燈、粉紅愛心與小黑輪)
+                const createTrainSvgDataUrl = (bodyColor) => {
+                    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                        <rect x="13" y="51" width="11" height="8" rx="4" fill="#2B211E"/>
+                        <rect x="40" y="51" width="11" height="8" rx="4" fill="#2B211E"/>
+                        <rect x="10" y="13" width="44" height="41" rx="8" fill="${bodyColor}" stroke="#4E3629" stroke-width="3.2"/>
+                        <path d="M18 13 V9 C18 6.8 19.8 5 22 5 H42 C44.2 5 46 6.8 46 9 V13 Z" fill="${bodyColor}" stroke="#4E3629" stroke-width="3.2"/>
+                        <path d="M10 15 C10 13.5 11.5 12 13 12 H51 C52.5 12 54 13.5 54 15 V30 H10 Z" fill="#FFFDF9" stroke="#4E3629" stroke-width="3.2"/>
+                        <rect x="21" y="16" width="22" height="10" rx="2.5" fill="#D8EEF8" stroke="#4E3629" stroke-width="2.5"/>
+                        <rect x="13.5" y="16" width="4.5" height="10" rx="1.5" fill="#D8EEF8" stroke="#4E3629" stroke-width="2.2"/>
+                        <rect x="46" y="16" width="4.5" height="10" rx="1.5" fill="#D8EEF8" stroke="#4E3629" stroke-width="2.2"/>
+                        <rect x="13.5" y="33.5" width="4.5" height="8" rx="2" fill="#FBD76D" stroke="#4E3629" stroke-width="2"/>
+                        <rect x="46" y="33.5" width="4.5" height="8" rx="2" fill="#FBD76D" stroke="#4E3629" stroke-width="2"/>
+                        <path d="M32 48.5 C32 48.5 23.5 42.5 23.5 37.2 C23.5 34.4 25.7 32.5 28.2 32.5 C29.8 32.5 31.2 33.4 32 34.7 C32.8 33.4 34.2 32.5 35.8 32.5 C38.3 32.5 40.5 34.4 40.5 37.2 C40.5 42.5 32 48.5 32 48.5 Z" fill="#F49AC1" stroke="#4E3629" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>`;
+                    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+                };
+
+                // 直接內建四色膠囊小火車 SVG，無需額外準備 PNG 檔
+                const trainIcons = {
+                    red: createTrainSvgDataUrl('#E4776C'),
+                    yellow: createTrainSvgDataUrl('#FBD76D'),
+                    green: createTrainSvgDataUrl('#92C889'),
+                    blue: createTrainSvgDataUrl('#6EA2CE')
+                };
+
+                const handleTrainImgError = (e, fallbackColor) => {
+                    e.target.onerror = null;
+                    e.target.src = createTrainSvgDataUrl(fallbackColor);
+                };
+
+                // Banner Image (預設 busan.jpg)
+                const bannerImage = ref(localStorage.getItem(STORAGE_KEY_PREFIX + 'BANNER') || 'busan.jpg');
+                const handleBannerError = (e) => {
+                    // 若找不到 busan.jpg，顯示海雲台海洋背景圖備援
+                    e.target.src = 'https://images.unsplash.com/photo-1578037571214-25e07d6d508d?q=80&w=800&auto=format&fit=crop';
+                };
+                const openBannerModal = () => {
+                    showToast('目前使用橫幅：' + bannerImage.value);
+                };
+
+                // 全局狀態與 Toast 提示
+                const isLoading = ref(false);
+                const toastMessage = ref('');
+                const showToast = (msg) => {
+                    toastMessage.value = msg;
+                    setTimeout(() => { toastMessage.value = ''; }, 2600);
+                };
+
+                // Tab 切換
+                const currentTab = ref('itinerary');
+                const selectedDayIndex = ref(0);
+                
+                // Modals 控制
+                const showAddEventModal = ref(false);
+                const showAddShopModal = ref(false);
+                const showAddExpenseModal = ref(false);
+                const showPoolModal = ref(false);
+                const showAddPackingModal = ref(false);
+                const showAddStoreModal = ref(false);
+                const showFlightModal = ref(false);
+                const showHotelModal = ref(false);
+
+                const isEditing = ref(false);
+                const editingEventIndex = ref(null);
+                const isEditingStore = ref(false);
+                const editingStoreIndex = ref(null);
+
+                // ================= 自動網路匯率邏輯 (KRW -> HKD) =================
+                const exchangeRate = ref(parseFloat(localStorage.getItem(STORAGE_KEY_PREFIX + 'RATE')) || 0.0058);
+                const calcKrw = ref('');
+                const isFetchingRate = ref(false);
+                const rateStatusText = ref('載入匯率中...');
+
+                const fetchLiveRate = async (isManual = false) => {
+                    isFetchingRate.value = true;
+                    try {
+                        // 使用免費公開匯率 API 抓取最新韓元對港幣匯率
+                        const response = await fetch('https://open.er-api.com/v6/latest/KRW');
+                        const data = await response.json();
+                        if (data && data.rates && data.rates.HKD) {
+                            const liveRate = parseFloat(data.rates.HKD.toFixed(5));
+                            exchangeRate.value = liveRate;
+                            localStorage.setItem(STORAGE_KEY_PREFIX + 'RATE', liveRate);
+                            const nowTime = new Date().toLocaleTimeString('zh-HK', { hour: '2-digit', minute: '2-digit' });
+                            localStorage.setItem(STORAGE_KEY_PREFIX + 'RATE_TIME', nowTime);
+                            rateStatusText.value = `自動更新 (${nowTime})`;
+                            if (isManual) showToast(`已更新最新匯率：1 KRW = ${liveRate} HKD`);
+                        } else {
+                            throw new Error('Invalid rate data');
+                        }
+                    } catch (err) {
+                        const savedTime = localStorage.getItem(STORAGE_KEY_PREFIX + 'RATE_TIME');
+                        rateStatusText.value = savedTime ? `離線快取 (${savedTime})` : '使用預設匯率';
+                        if (isManual) showToast('目前無網絡，沿用上次儲存匯率');
+                    } finally {
+                        isFetchingRate.value = false;
+                    }
+                };
+
+                const saveManualRate = () => {
+                    if (exchangeRate.value > 0) {
+                        localStorage.setItem(STORAGE_KEY_PREFIX + 'RATE', exchangeRate.value);
+                        rateStatusText.value = '已套用手動自訂匯率';
+                        showToast('已更新自訂匯率！');
+                    }
+                };
+
+                // 釜山 4 月天氣顯示
+                const currentWeather = ref({
+                    temp: 16,
+                    feelsLike: 15,
+                    condition: 'sunny',
+                    desc: '晴朗微風'
+                });
+
+                // 分頁選單設定
+                const tabs = [
+                    { id: 'itinerary', label: '每日行程', icon: 'fa-solid fa-map-location-dot' },
+                    { id: 'info', label: '資訊與匯率', icon: 'fa-solid fa-circle-info' },
+                    { id: 'shopping', label: '購物清單', icon: 'fa-solid fa-basket-shopping' },
+                    { id: 'expenses', label: '公費與分帳', icon: 'fa-solid fa-sack-dollar' },
+                    { id: 'packing', label: '行李清單', icon: 'fa-solid fa-suitcase' },
+                    { id: 'stores', label: '美食與店舖', icon: 'fa-solid fa-store' }
+                ];
+
+                // 2027.04.15 - 2027.04.19 (5天4夜，預設清空行程)
+                const initialItinerary = [
+                    { date: '2027-04-15', events: [] },
+                    { date: '2027-04-16', events: [] },
+                    { date: '2027-04-17', events: [] },
+                    { date: '2027-04-18', events: [] },
+                    { date: '2027-04-19', events: [] }
+                ];
+
+                // 讀取本機資料
+                const itineraryData = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'ITINERARY')) || initialItinerary);
+                const shoppingList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'SHOPPING')) || []);
+                const expenseList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'EXPENSES')) || []);
+                const commonPoolTotal = ref(parseInt(localStorage.getItem(STORAGE_KEY_PREFIX + 'POOL')) || 0);
+                const perPersonPoolInput = ref(commonPoolTotal.value ? Math.round(commonPoolTotal.value / 4) : '');
+                const packingList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'PACKING')) || [
+                    { id: 1, name: '護照 & K-ETA / 入境卡資料', type: 'carry_on', packed: false },
+                    { id: 2, name: 'WOWPASS / T-money 交通卡', type: 'carry_on', packed: false },
+                    { id: 3, name: '韓元現金', type: 'carry_on', packed: false },
+                    { id: 4, name: '韓國雙圓腳轉插 & 充電線', type: 'checked', packed: false }
+                ]);
+                const storeList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'STORES')) || []);
+                const flightList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'FLIGHTS')) || []);
+                const hotelList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'HOTELS')) || []);
+
+                // 表單資料模型
+                const newEvent = ref({ type: 'sight', name: '', naverQuery: '', time: '10:00', transport: 'train', travelTime: '', note: '' });
+                const newShopItem = ref({ name: '', image: null, bought: false });
+                const newExpense = ref({ 
+                    category: 'food', 
+                    name: '', 
+                    amount: '', 
+                    payer: 'POOL', 
+                    splitAmong: [...members], 
+                    method: 'cash', 
+                    date: '2027-04-15', 
+                    note: '' 
+                });
+                const newPackingItem = ref({ name: '', type: 'checked' });
+                const newStore = ref({ name: '', address: '', hours: '', type: 'food', note: '' });
+                const newFlight = ref({ label: '', code: '', depAirport: 'HKG', depTime: '', arrAirport: 'PUS', arrTime: '', duration: '' });
+                const newHotel = ref({ name: '', dates: '', checkIn: '15:00', checkOut: '11:00', address: '' });
+
+                // 結算面板展開狀態
+                const showSettlement = ref(true);
+
+                // ================= Computed 計算屬性 =================
+                const currentDayEvents = computed(() => {
+                    return itineraryData.value[selectedDayIndex.value]?.events || [];
+                });
+
+                const totalExpenses = computed(() => {
+                    return expenseList.value.reduce((sum, item) => sum + parseInt(item.amount || 0), 0);
+                });
+
+                // 公費池已花費與剩餘計算
+                const commonPoolSpent = computed(() => {
+                    return expenseList.value
+                        .filter(item => item.payer === 'POOL')
+                        .reduce((sum, item) => sum + parseInt(item.amount || 0), 0);
+                });
+
+                const commonPoolRemaining = computed(() => {
+                    return commonPoolTotal.value - commonPoolSpent.value;
+                });
+
+                // 四人個人代墊淨收支計算
+                const memberBalances = computed(() => {
+                    const balances = { Candice: 0, Carmen: 0, Christy: 0, Tung: 0 };
+                    expenseList.value.forEach(exp => {
+                        if (exp.payer !== 'POOL' && members.includes(exp.payer)) {
+                            const amt = parseFloat(exp.amount || 0);
+                            const splitList = (exp.splitAmong && exp.splitAmong.length > 0) ? exp.splitAmong : members;
+                            const share = amt / splitList.length;
+                            
+                            // 付款人先加上全額
+                            balances[exp.payer] += amt;
+                            // 參與分攤者各自扣除應付份額
+                            splitList.forEach(person => {
+                                if (balances[person] !== undefined) {
+                                    balances[person] -= share;
+                                }
+                            });
+                        }
+                    });
+                    return balances;
+                });
+
+                // 貪婪演算法計算最簡化轉帳路徑
+                const settlementPlan = computed(() => {
+                    const debtors = [];
+                    const creditors = [];
+                    
+                    for (const m of members) {
+                        const bal = Math.round(memberBalances.value[m]);
+                        if (bal < -1) debtors.push({ name: m, amount: -bal });
+                        else if (bal > 1) creditors.push({ name: m, amount: bal });
+                    }
+
+                    debtors.sort((a, b) => b.amount - a.amount);
+                    creditors.sort((a, b) => b.amount - a.amount);
+
+                    const plan = [];
+                    let i = 0, j = 0;
+                    while (i < debtors.length && j < creditors.length) {
+                        const payAmt = Math.min(debtors[i].amount, creditors[j].amount);
+                        if (payAmt > 0) {
+                            plan.push({
+                                from: debtors[i].name,
+                                to: creditors[j].name,
+                                amount: payAmt
+                            });
+                        }
+                        debtors[i].amount -= payAmt;
+                        creditors[j].amount -= payAmt;
+                        if (debtors[i].amount === 0) i++;
+                        if (creditors[j].amount === 0) j++;
+                    }
+                    return plan;
+                });
+
+                const packingProgress = computed(() => {
+                    if (packingList.value.length === 0) return 0;
+                    const packedCount = packingList.value.filter(item => item.packed).length;
+                    return Math.round((packedCount / packingList.value.length) * 100);
+                });
+
+                // ================= 輔助方法 =================
+                const getDayOfWeek = (dateStr) => {
+                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    return days[new Date(dateStr).getDay()];
+                };
+
+                const getDayDate = (dateStr) => {
+                    return new Date(dateStr).getDate();
+                };
+
+                const getWeatherIcon = (condition) => {
+                    const map = { sunny: 'fa-sun', cloudy: 'fa-cloud', rain: 'fa-cloud-rain' };
+                    return `fa-solid ${map[condition] || 'fa-sun'}`;
+                };
+
+                // 應用 1：依分類回傳對應小火車圖檔
+                const getTrainByCategory = (type) => {
+                    const map = {
+                        flight: trainIcons.red,
+                        train: trainIcons.red,
+                        sight: trainIcons.yellow,
+                        shop: trainIcons.yellow,
+                        food: trainIcons.green,
+                        other: trainIcons.green,
+                        hotel: trainIcons.blue
+                    };
+                    return map[type] || trainIcons.yellow;
+                };
+
+                const getCategoryBorderColor = (type) => {
+                    const map = {
+                        sight: 'border-sunset-yellow',
+                        shop: 'border-sunset-yellow',
+                        food: 'border-forest-green',
+                        other: 'border-forest-green',
+                        hotel: 'border-sky-blue',
+                        flight: 'border-coral-red',
+                        train: 'border-coral-red'
+                    };
+                    return map[type] || 'border-sky-blue';
+                };
+
+                const getCategoryIcon = (cat) => {
+                     const map = { food: 'fa-utensils', transport: 'fa-train', shopping: 'fa-bag-shopping', ticket: 'fa-ticket', hotel: 'fa-bed', other: 'fa-asterisk' };
+                     return `fa-solid ${map[cat] || 'fa-asterisk'}`;
+                };
+
+                // Naver Map 智能跳轉 (支援完整 naver.me / map.naver.com 網址，或自動搜尋韓文地址/店名)
+                const openNaverMap = (queryOrUrl) => {
+                    if (!queryOrUrl) return;
+                    const trimmed = queryOrUrl.trim();
+                    if (/^https?:\/\//i.test(trimmed)) {
+                        window.open(trimmed, '_blank');
+                    } else {
+                        window.open(`https://map.naver.com/p/search/${encodeURIComponent(trimmed)}`, '_blank');
+                    }
+                };
+
+                const getPackingListByType = (type) => {
+                    return packingList.value.filter(item => item.type === type);
+                };
+
+                // 公費池設定
+                const updateTotalPoolFromPerPerson = () => {
+                    if (perPersonPoolInput.value >= 0) {
+                        commonPoolTotal.value = perPersonPoolInput.value * 4;
+                    }
+                };
+                const savePoolSetting = () => {
+                    saveAllToLocal();
+                    showPoolModal.value = false;
+                    showToast('已更新四人公費池總額！');
+                };
+
+                // 複製分帳明細至剪貼簿
+                const copySettlementText = () => {
+                    let text = `🌊 釜山之旅 (2027.04.15-19) 記帳結算\n`;
+                    text += `━━━━━━━━━━━━━━\n`;
+                    text += `總花費：₩${totalExpenses.value.toLocaleString()} (約 HKD $${(totalExpenses.value * exchangeRate.value).toFixed(0)})\n`;
+                    text += `公費池剩餘：₩${commonPoolRemaining.value.toLocaleString()}\n\n`;
+                    text += `💡 個人代墊結算轉帳：\n`;
+                    if (settlementPlan.value.length === 0) {
+                        text += `目前帳目已扯平，無需轉帳！✨`;
+                    } else {
+                        settlementPlan.value.forEach(tx => {
+                            text += `• ${tx.from} ➔ ${tx.to}：₩${tx.amount.toLocaleString()} (約 HKD $${(tx.amount * exchangeRate.value).toFixed(1)})\n`;
+                        });
+                    }
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('已複製結算明細！可直接貼上 WhatsApp');
+                    });
+                };
+
+                // 資料備份與還原
+                const backupData = () => {
+                    const dataStr = JSON.stringify({
+                        itinerary: itineraryData.value,
+                        shopping: shoppingList.value,
+                        expenses: expenseList.value,
+                        pool: commonPoolTotal.value,
+                        packing: packingList.value,
+                        stores: storeList.value
+                    });
+                    const action = prompt('【釜山 App 資料管理】\n輸入 "copy" 複製全部備份碼\n或直接貼上備份碼進行還原:', '');
+                    if (action === 'copy') {
+                        navigator.clipboard.writeText(dataStr).then(() => showToast('已複製完整備份碼！'));
+                    } else if (action && action.length > 10) {
+                        try {
+                            const parsed = JSON.parse(action);
+                            if (parsed.itinerary) itineraryData.value = parsed.itinerary;
+                            if (parsed.shopping) shoppingList.value = parsed.shopping;
+                            if (parsed.expenses) expenseList.value = parsed.expenses;
+                            if (parsed.pool !== undefined) commonPoolTotal.value = parsed.pool;
+                            if (parsed.packing) packingList.value = parsed.packing;
+                            if (parsed.stores) storeList.value = parsed.stores;
+                            saveAllToLocal();
+                            showToast('資料還原成功！');
+                        } catch(e) { showToast('備份碼格式不正確'); }
+                    }
+                };
+
+                // ================= CRUD 操作邏輯 =================
+                
+                // 行程 CRUD
+                const openNewEventModal = () => {
+                    isEditing.value = false;
+                    newEvent.value = { type: 'sight', name: '', naverQuery: '', time: '10:00', transport: 'train', travelTime: '', note: '' };
+                    showAddEventModal.value = true;
+                };
+
+                const saveEvent = () => {
+                    if (!newEvent.value.name) return;
+                    const eventPayload = { ...newEvent.value, id: Date.now() };
+                    if (isEditing.value) {
+                        itineraryData.value[selectedDayIndex.value].events[editingEventIndex.value] = eventPayload;
+                    } else {
+                        itineraryData.value[selectedDayIndex.value].events.push(eventPayload);
+                    }
+                    saveAllToLocal();
+                    showAddEventModal.value = false;
+                    showToast(isEditing.value ? '行程已更新' : '已新增行程！');
+                };
+
+                const editEvent = (index) => {
+                    isEditing.value = true;
+                    editingEventIndex.value = index;
+                    newEvent.value = { naverQuery: '', ...itineraryData.value[selectedDayIndex.value].events[index] };
+                    showAddEventModal.value = true;
+                };
+
+                const confirmDeleteEvent = () => {
+                    itineraryData.value[selectedDayIndex.value].events.splice(editingEventIndex.value, 1);
+                    saveAllToLocal();
+                    showAddEventModal.value = false;
+                    showToast('已刪除該行程');
+                };
+                
+                const moveEvent = (index, direction) => {
+                    const arr = itineraryData.value[selectedDayIndex.value].events;
+                    const newIndex = index + direction;
+                    if (newIndex >= 0 && newIndex < arr.length) {
+                        [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
+                        saveAllToLocal();
+                    }
+                };
+
+                // 購物 CRUD
+                const handleImageUpload = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => { newShopItem.value.image = ev.target.result; };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                
+                const saveShopItem = () => {
+                    if (!newShopItem.value.name) return;
+                    shoppingList.value.push({ ...newShopItem.value });
+                    saveAllToLocal();
+                    showAddShopModal.value = false;
+                    newShopItem.value = { name: '', image: null, bought: false };
+                    showToast('已加入購物清單！');
+                };
+
+                const deleteShoppingItem = (index) => {
+                    shoppingList.value.splice(index, 1);
+                    saveAllToLocal();
+                    showToast('已移除商品');
+                };
+
+                const toggleBought = (index) => {
+                    shoppingList.value[index].bought = !shoppingList.value[index].bought;
+                    saveAllToLocal();
+                };
+
+                // 記帳與分攤 CRUD
+                const openNewExpenseModal = () => {
+                    const currentDayDate = itineraryData.value[selectedDayIndex.value]?.date || '2027-04-15';
+                    newExpense.value = {
+                        category: 'food',
+                        name: '',
+                        amount: '',
+                        payer: 'POOL',
+                        splitAmong: [...members],
+                        method: 'cash',
+                        date: currentDayDate,
+                        note: ''
+                    };
+                    showAddExpenseModal.value = true;
+                };
+
+                const selectAllMembers = () => {
+                    newExpense.value.splitAmong = [...members];
+                };
+
+                const saveExpense = () => {
+                    if (!newExpense.value.amount || !newExpense.value.name) {
+                        showToast('請輸入消費項目與韓元金額');
+                        return;
+                    }
+                    if (newExpense.value.payer !== 'POOL' && newExpense.value.splitAmong.length === 0) {
+                        showToast('請至少勾選一位分攤成員');
+                        return;
+                    }
+                    expenseList.value.unshift({ ...newExpense.value });
+                    saveAllToLocal();
+                    showAddExpenseModal.value = false;
+                    showToast('記帳已儲存！');
+                };
+
+                const deleteExpense = (index) => {
+                    expenseList.value.splice(index, 1);
+                    saveAllToLocal();
+                    showToast('已刪除該筆記帳');
+                };
+
+                // 行李 CRUD
+                const savePackingItem = () => {
+                    if (!newPackingItem.value.name) return;
+                    packingList.value.push({
+                        id: Date.now(),
+                        name: newPackingItem.value.name,
+                        type: newPackingItem.value.type,
+                        packed: false
+                    });
+                    saveAllToLocal();
+                    showAddPackingModal.value = false;
+                    newPackingItem.value = { name: '', type: 'checked' };
+                    showToast('已加入行李清單');
+                };
+
+                const deletePackingItem = (id) => {
+                    packingList.value = packingList.value.filter(item => item.id !== id);
+                    saveAllToLocal();
+                };
+
+                const togglePacked = (item) => {
+                    item.packed = !item.packed;
+                    saveAllToLocal();
+                };
+
+                // 店舖 CRUD
+                const saveStore = () => {
+                    if (!newStore.value.name) return;
+                    if (isEditingStore.value) {
+                        storeList.value[editingStoreIndex.value] = { ...newStore.value };
+                    } else {
+                        storeList.value.push({ ...newStore.value });
+                    }
+                    saveAllToLocal();
+                    showAddStoreModal.value = false;
+                    newStore.value = { name: '', address: '', hours: '', type: 'food', note: '' };
+                    showToast('已儲存店舖資訊！');
+                };
+
+                const editStore = (index) => {
+                    isEditingStore.value = true;
+                    editingStoreIndex.value = index;
+                    newStore.value = { ...storeList.value[index] };
+                    showAddStoreModal.value = true;
+                };
+
+                const confirmDeleteStore = () => {
+                    storeList.value.splice(editingStoreIndex.value, 1);
+                    saveAllToLocal();
+                    showAddStoreModal.value = false;
+                    showToast('已刪除店舖');
+                };
+
+                // 航班與住宿 CRUD
+                const saveFlight = () => {
+                    if (!newFlight.value.code) return;
+                    flightList.value.push({ ...newFlight.value });
+                    saveAllToLocal();
+                    showFlightModal.value = false;
+                    newFlight.value = { label: '', code: '', depAirport: 'HKG', depTime: '', arrAirport: 'PUS', arrTime: '', duration: '' };
+                    showToast('已新增航班！');
+                };
+                const deleteFlight = (idx) => {
+                    flightList.value.splice(idx, 1);
+                    saveAllToLocal();
+                };
+
+                const saveHotel = () => {
+                    if (!newHotel.value.name) return;
+                    hotelList.value.push({ ...newHotel.value });
+                    saveAllToLocal();
+                    showHotelModal.value = false;
+                    newHotel.value = { name: '', dates: '', checkIn: '15:00', checkOut: '11:00', address: '' };
+                    showToast('已新增住宿！');
+                };
+                const deleteHotel = (idx) => {
+                    hotelList.value.splice(idx, 1);
+                    saveAllToLocal();
+                };
+
+                // 統一儲存接口 (日後只需在此處同步寫入 Firebase Firestore)
+                const saveAllToLocal = () => {
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'ITINERARY', JSON.stringify(itineraryData.value));
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'SHOPPING', JSON.stringify(shoppingList.value));
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'EXPENSES', JSON.stringify(expenseList.value));
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'POOL', commonPoolTotal.value.toString());
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'PACKING', JSON.stringify(packingList.value));
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'STORES', JSON.stringify(storeList.value));
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'FLIGHTS', JSON.stringify(flightList.value));
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'HOTELS', JSON.stringify(hotelList.value));
+                };
+
+                onMounted(() => {
+                    fetchLiveRate(false);
+                });
+
+                return {
+                    members, trainIcons, handleTrainImgError,
+                    bannerImage, handleBannerError, openBannerModal,
+                    isLoading, toastMessage, showToast,
+                    currentTab, tabs, selectedDayIndex,
+                    itineraryData, shoppingList, expenseList, packingList, storeList, flightList, hotelList,
+                    currentDayEvents, totalExpenses, commonPoolTotal, commonPoolSpent, commonPoolRemaining, perPersonPoolInput,
+                    memberBalances, settlementPlan, showSettlement,
+                    packingProgress,
+                    showAddEventModal, showAddShopModal, showAddExpenseModal, showPoolModal, showAddPackingModal, showAddStoreModal, showFlightModal, showHotelModal,
+                    isEditing, newEvent, newShopItem, newExpense, newPackingItem, newStore, newFlight, newHotel,
+                    isEditingStore, editingStoreIndex,
+                    getDayOfWeek, getDayDate, getWeatherIcon, getTrainByCategory, getCategoryBorderColor, getCategoryIcon,
+                    currentWeather, calcKrw, exchangeRate, isFetchingRate, rateStatusText, fetchLiveRate, saveManualRate,
+                    openNewEventModal, saveEvent, editEvent, confirmDeleteEvent, moveEvent,
+                    handleImageUpload, saveShopItem, deleteShoppingItem, toggleBought,
+                    openNewExpenseModal, selectAllMembers, saveExpense, deleteExpense, updateTotalPoolFromPerPerson, savePoolSetting, copySettlementText, backupData,
+                    savePackingItem, deletePackingItem, togglePacked, getPackingListByType,
+                    saveStore, editStore, confirmDeleteStore,
+                    saveFlight, deleteFlight, saveHotel, deleteHotel,
+                    openNaverMap
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
