@@ -267,77 +267,124 @@
                              <span>{{ event.travelTime || '15 min' }}</span>
                         </div>
 
-                        <!-- 行程卡片 -->
-                        <div 
-                            class="kawaii-card rounded-2xl p-4 border-l-8 active-scale transition-transform relative overflow-hidden cursor-pointer"
-                            :class="getCategoryBorderColor(event.type)"
-                            @click="openNaverMap(event.naverUrl || event.naverQuery || event.name)"
-                        >
-                            <!-- 航班樣式 -->
-                            <div v-if="event.type === 'flight'" class="flex justify-between items-center">
-                                <div class="flex items-center space-x-3">
-                                    <img :src="getTrainByCategory('flight')" class="w-8 h-8 object-contain shrink-0">
-                                    <div>
-                                        <div class="font-bold text-lg text-dark-brown">{{ event.name }}</div>
-                                        <div class="text-sm text-warm-gray font-mono">{{ event.time }}</div>
-                                    </div>
-                                </div>
-                                <div class="text-xs bg-coral-red text-white px-2.5 py-1 rounded-full font-bold border border-dark-brown">FLIGHT</div>
-                            </div>
-
-                            <!-- 一般行程樣式 -->
-                            <div v-else class="flex items-start space-x-3">
-                                <!-- 應用 1：依分類顯示對應膠囊小火車 -->
-                                <img :src="getTrainByCategory(event.type)" class="w-8 h-8 object-contain shrink-0 mt-0.5">
-                                
-                                <div class="flex-1 pr-6 min-w-0">
-                                    <div class="flex justify-between items-start mb-1">
-                                        <h3 class="font-bold text-lg text-dark-brown leading-snug">{{ event.name }}</h3>
-                                        <span class="text-xs font-mono font-bold bg-sea-blue text-dark-brown px-2 py-0.5 rounded-lg border border-dark-brown/30 ml-2 shrink-0">{{ event.time }}</span>
-                                    </div>
-                                    
-                                    <!-- Naver Map 地址 / 關鍵字顯示 -->
-                                    <div v-if="event.naverQuery" class="text-xs text-dark-brown/80 mt-1 flex items-center">
-                                        <i class="fa-solid fa-location-dot text-forest-green mr-1.5 shrink-0"></i>
-                                        <span class="truncate">{{ event.naverQuery }}</span>
-                                    </div>
-
-                                    <div class="flex flex-wrap items-center justify-between gap-2 mt-2 text-xs text-warm-gray">
-                                        <span v-if="event.note" class="flex items-center bg-paper-white px-2 py-1 rounded-lg border border-dark-brown/20">
-                                            <i class="fa-solid fa-circle-info mr-1 text-sky-blue"></i> {{ event.note }}
+                        <!-- 行程卡片主體 -->
+                        <div @click="editEvent(index)" class="kawaii-card rounded-2xl p-4 relative active-scale transition-transform border-l-8 cursor-pointer" :class="getCategoryBorderColor(event.type)">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-start space-x-3 pr-2 min-w-0">
+                                    <!-- 小火車分類圖示 + 時間 -->
+                                    <div class="flex flex-col items-center shrink-0 pt-0.5">
+                                        <img :src="getTrainByCategory(event.type)" class="w-8 h-8 object-contain">
+                                        <span class="text-xs font-bold font-mono text-dark-brown mt-1 bg-paper-white px-2 py-0.5 rounded-full border border-dark-brown/20">
+                                            {{ event.time }}
                                         </span>
-                                        <span v-else></span>
+                                    </div>
 
-                                        <!-- Naver Map 快速跳轉徽章 -->
-                                        <span class="inline-flex items-center bg-[#03C75A]/15 text-[#029E47] border border-[#03C75A]/40 font-bold px-2 py-0.5 rounded-full text-[11px] ml-auto">
-                                            <span class="font-black mr-1">N</span> {{ event.naverUrl ? '直達 Naver 地圖' : 'Naver Map 搜尋' }}
-                                        </span>
+                                    <!-- 景點名稱、Naver Map 與備註 -->
+                                    <div class="min-w-0 flex-1">
+                                        <h3 class="font-bold text-base text-dark-brown leading-snug break-words">{{ event.name }}</h3>
+                                        
+                                        <!-- Naver Map 導航標籤 -->
+                                        <div v-if="event.naverUrl || event.naverQuery" class="mt-1.5 flex items-center space-x-1.5">
+                                            <button 
+                                                @click.stop="openNaverMap(event.naverUrl || event.naverQuery || event.name)" 
+                                                class="inline-flex items-center bg-[#03C75A]/15 hover:bg-[#03C75A]/25 text-[#029E47] border border-[#03C75A]/40 font-bold px-2.5 py-0.5 rounded-full text-[11px] transition-colors"
+                                            >
+                                                <span class="font-black mr-1">N</span> 
+                                                <span>{{ event.naverUrl ? '直達 Naver Map' : 'Naver Map 搜尋' }}</span>
+                                            </button>
+                                        </div>
+
+                                        <!-- 備註區塊 -->
+                                        <div v-if="event.note" class="text-xs text-dark-brown/85 bg-paper-white p-2 rounded-xl border border-dark-brown/15 mt-2 leading-relaxed">
+                                            {{ event.note }}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <button @click.stop="editEvent(index)" class="absolute top-2.5 right-2.5 p-2 text-warm-gray hover:text-dark-brown">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
+                                <!-- 右側上下排序與編輯按鈕 -->
+                                <div class="flex flex-col space-y-1 shrink-0 ml-1" @click.stop>
+                                    <button v-if="index > 0" @click="moveEvent(index, -1)" class="w-6 h-6 rounded-full bg-paper-white border border-dark-brown/30 text-warm-gray hover:text-dark-brown flex items-center justify-center text-[10px]" title="上移">
+                                        <i class="fa-solid fa-chevron-up"></i>
+                                    </button>
+                                    <button v-if="index < currentDayEvents.length - 1" @click="moveEvent(index, 1)" class="w-6 h-6 rounded-full bg-paper-white border border-dark-brown/30 text-warm-gray hover:text-dark-brown flex items-center justify-center text-[10px]" title="下移">
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </button>
+                                    <button @click="editEvent(index)" class="w-6 h-6 rounded-full bg-sea-blue/60 border border-dark-brown/30 text-dark-brown flex items-center justify-center text-[10px]" title="編輯">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- 上下移動順序按鈕 -->
-                        <div class="absolute -right-2 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button v-if="index > 0" @click.stop="moveEvent(index, -1)" class="w-6 h-6 bg-white border border-dark-brown rounded-full shadow text-dark-brown text-xs"><i class="fa-solid fa-arrow-up"></i></button>
-                            <button v-if="index < currentDayEvents.length - 1" @click.stop="moveEvent(index, 1)" class="w-6 h-6 bg-white border border-dark-brown rounded-full shadow text-dark-brown text-xs"><i class="fa-solid fa-arrow-down"></i></button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 浮動新增行程按鈕 (復古天藍) -->
+                <!-- 浮動新增行程按鈕 -->
                 <button @click="openNewEventModal" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>
 
-            <!-- 2. 資訊 Tab (自動網路匯率 + 可編輯航班住宿 + 韓國緊急電話) -->
+            <!-- 2. 資訊 Tab (出發前待辦 + 自動網路匯率 + 可編輯航班住宿 + 韓國緊急電話) -->
             <div v-if="currentTab === 'info'" class="space-y-6 pb-10">
                 
+                <!-- 出發前四人待辦事項 (To-Do / 搶票提醒) -->
+                <section class="kawaii-card rounded-2xl p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-dark-brown flex items-center">
+                            <img :src="trainIcons.green" class="w-6 h-6 object-contain mr-2">
+                            出發前四人待辦事項
+                        </h3>
+                        <span class="text-xs font-bold bg-sea-blue text-dark-brown px-2.5 py-0.5 rounded-full border border-dark-brown/30">
+                            {{ todoDoneCount }}/{{ todoList.length }} 完成
+                        </span>
+                    </div>
+
+                    <!-- 快速新增待辦輸入框 -->
+                    <div class="flex space-x-2 mb-3">
+                        <input 
+                            v-model="newTodoText" 
+                            @keyup.enter="addTodoItem"
+                            class="flex-1 min-w-0 bg-paper-white border border-dark-brown/30 rounded-xl px-3 py-2 text-xs outline-none focus:border-sky-blue" 
+                            placeholder="例: 搶海雲台膠囊小火車 (提前2週韓國00:00)..."
+                        >
+                        <button @click="addTodoItem" class="bg-sunset-yellow text-dark-brown font-bold text-xs px-3.5 py-2 rounded-xl border-2 border-dark-brown shrink-0 active-scale">
+                            + 新增
+                        </button>
+                    </div>
+
+                    <div v-if="todoList.length === 0" class="text-center py-4 bg-paper-white rounded-xl border border-dashed border-dark-brown/30 text-xs text-warm-gray">
+                        目前沒有待辦事項，出發前有要搶票或預約的都可以記在這裡 ✨
+                    </div>
+
+                    <div v-else class="space-y-2">
+                        <div 
+                            v-for="(todo, idx) in todoList" 
+                            :key="todo.id" 
+                            @click="toggleTodoItem(todo)"
+                            class="flex items-center justify-between p-2.5 rounded-xl border transition-colors cursor-pointer"
+                            :class="todo.done ? 'bg-paper-white/60 border-dark-brown/15' : 'bg-white border-dark-brown/25 hover:bg-sea-blue/20'"
+                        >
+                            <div class="flex items-start space-x-2.5 min-w-0 pr-2">
+                                <div class="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors"
+                                     :class="todo.done ? 'bg-forest-green border-dark-brown' : 'border-dark-brown/40 bg-white'">
+                                    <i v-if="todo.done" class="fa-solid fa-check text-dark-brown text-[10px]"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold leading-snug" :class="todo.done ? 'line-through text-warm-gray' : 'text-dark-brown'">
+                                        {{ todo.text }}
+                                    </div>
+                                    <div v-if="todo.done && todo.doneBy" class="text-[10px] text-forest-green font-bold mt-0.5">
+                                        ✓ 由 {{ todo.doneBy }} 完成
+                                    </div>
+                                </div>
+                            </div>
+                            <button @click.stop="deleteTodoItem(idx)" class="text-warm-gray hover:text-coral-red p-1 text-xs shrink-0">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- 韓元自動匯率換算器 -->
                 <section class="kawaii-card rounded-2xl p-5">
                     <div class="flex justify-between items-center mb-3">
@@ -794,7 +841,7 @@
                                 <img :src="store.type === 'food' ? trainIcons.red : trainIcons.yellow" class="w-6 h-6 object-contain mr-2">
                                 {{ store.name }}
                             </h3>
-                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-dark-brown text-dark-brown" :class="store.type === 'food' ? 'bg-coral-red/30' : 'bg-sunset-yellow'">
+                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-dark-brown text-dark-brown shrink-0" :class="store.type === 'food' ? 'bg-coral-red/30' : 'bg-sunset-yellow'">
                                 {{ store.type === 'food' ? '美食' : '購物' }}
                             </span>
                         </div>
@@ -817,6 +864,17 @@
                                 <i class="fa-solid fa-sticky-note mt-0.5 mr-1.5 text-forest-green w-3"></i>
                                 <span>{{ store.note }}</span>
                             </div>
+                        </div>
+
+                        <!-- 底部功能列：一鍵排入行程按鈕 -->
+                        <div class="mt-3 pt-2.5 border-t border-dashed border-dark-brown/15 flex justify-end">
+                            <button 
+                                @click.stop="openScheduleStoreModal(store)" 
+                                class="bg-sunset-yellow/90 hover:bg-sunset-yellow text-dark-brown text-xs font-bold px-3 py-1.5 rounded-full border border-dark-brown flex items-center space-x-1.5 shadow-2xs active-scale"
+                            >
+                                <i class="fa-regular fa-calendar-plus"></i>
+                                <span>排入行程</span>
+                            </button>
                         </div>
 
                         <!-- 編輯按鈕 -->
@@ -1038,7 +1096,7 @@
         <!-- 3.5 設定韓元公費池 Modal -->
         <div v-if="showPoolModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
-                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定韓元公費池 💰</h3>
+                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定四人韓元公費池 💰</h3>
                 <p class="text-xs text-warm-gray text-center mb-4">輸入出發前大家夾錢放入公費的總韓元金額</p>
                 
                 <div class="space-y-3">
@@ -1179,6 +1237,48 @@
             </div>
         </div>
 
+        <!-- 8. 一鍵將店舖排入行程 Modal -->
+        <div v-if="showScheduleStoreModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                <h3 class="text-xl font-bold mb-1 text-center text-dark-brown">排入每日行程 📅</h3>
+                <p class="text-xs text-center text-sky-blue font-bold mb-4 truncate px-2">
+                    {{ scheduleStoreForm.store?.name }}
+                </p>
+
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="font-bold text-warm-gray block mb-1">選擇日期</label>
+                        <select v-model.number="scheduleStoreForm.dayIndex" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 font-bold text-dark-brown outline-none">
+                            <option v-for="(day, idx) in itineraryData" :key="idx" :value="idx">
+                                Day {{ idx + 1 }} ({{ day.date }} {{ getDayOfWeek(day.date) }})
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                            <label class="font-bold text-warm-gray block mb-1">預計時間</label>
+                            <input type="time" v-model="scheduleStoreForm.time" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 font-bold text-dark-brown outline-none">
+                        </div>
+                        <div class="min-w-0">
+                            <label class="font-bold text-warm-gray block mb-1">交通預估 (選填)</label>
+                            <input v-model="scheduleStoreForm.travelTime" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="例: 15 min">
+                        </div>
+                    </div>
+
+                    <div class="bg-sea-blue/50 p-2.5 rounded-xl border border-dark-brown/15 text-[11px] text-dark-brown/80 space-y-1">
+                        <div><i class="fa-solid fa-check text-forest-green mr-1"></i> 自動帶入店名與 Naver Map 導航連結</div>
+                        <div v-if="scheduleStoreForm.store?.note"><i class="fa-solid fa-check text-forest-green mr-1"></i> 自動帶入備註：{{ scheduleStoreForm.store.note }}</div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2 mt-5">
+                    <button @click="showScheduleStoreModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
+                    <button @click="confirmScheduleStore" class="flex-1 bg-sky-blue text-white py-2.5 rounded-xl font-bold kawaii-btn">確認加入行程</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Logic Script -->
@@ -1297,6 +1397,7 @@
                 const showAddStoreModal = ref(false);
                 const showFlightModal = ref(false);
                 const showHotelModal = ref(false);
+                const showScheduleStoreModal = ref(false);
 
                 const isEditing = ref(false);
                 const editingEventIndex = ref(null);
@@ -1386,6 +1487,15 @@
                 const flightList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'FLIGHTS')) || []);
                 const hotelList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'HOTELS')) || []);
 
+                // 出發前四人待辦事項 (預設釜山行前提醒)
+                const defaultTodos = [
+                    { id: 101, text: '搶海雲台藍線公園膠囊小火車票 (出發前2週韓國 00:00 開放)', done: false, doneBy: '' },
+                    { id: 102, text: '購買韓國 eSIM 電話卡 & 旅遊保險', done: false, doneBy: '' },
+                    { id: 103, text: '出發前 3 天內填寫韓國電子入境卡 (e-Arrival Card)', done: false, doneBy: '' }
+                ];
+                const todoList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'TODOS')) || defaultTodos);
+                const newTodoText = ref('');
+
                 const onUserSwitch = () => {
                     localStorage.setItem(STORAGE_KEY_PREFIX + 'CURRENT_USER', currentUser.value);
                     privateShoppingList.value = loadPrivateShopping(currentUser.value);
@@ -1411,6 +1521,7 @@
                 const newStore = ref({ name: '', naverRawInput: '', address: '', naverUrl: '', hours: '', type: 'food', note: '' });
                 const newFlight = ref({ label: '', code: '', depAirport: 'HKG', depTime: '', arrAirport: 'PUS', arrTime: '', duration: '' });
                 const newHotel = ref({ name: '', dates: '', checkIn: '15:00', checkOut: '11:00', naverRawInput: '', address: '', naverUrl: '' });
+                const scheduleStoreForm = ref({ store: null, dayIndex: 0, time: '12:00', travelTime: '' });
 
                 const showSettlement = ref(true);
 
@@ -1573,6 +1684,10 @@
                     return Math.round((packedCount / packingList.value.length) * 100);
                 });
 
+                const todoDoneCount = computed(() => {
+                    return todoList.value.filter(t => t.done).length;
+                });
+
                 // ================= 輔助方法 =================
                 const getDayOfWeek = (dateStr) => {
                     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -1687,7 +1802,8 @@
                         expenses: expenseList.value,
                         pool: commonPoolTotal.value,
                         packing: packingList.value,
-                        stores: storeList.value
+                        stores: storeList.value,
+                        todos: todoList.value
                     });
                     const action = prompt('【釜山 App 資料管理】\n輸入 "copy" 複製全部備份碼\n或直接貼上備份碼進行還原:', '');
                     if (action === 'copy') {
@@ -1702,6 +1818,7 @@
                             if (parsed.pool !== undefined) commonPoolTotal.value = parsed.pool;
                             if (parsed.packing) packingList.value = parsed.packing;
                             if (parsed.stores) storeList.value = parsed.stores;
+                            if (parsed.todos) todoList.value = parsed.todos;
                             saveAllToLocal();
                             showToast('資料還原成功！');
                         } catch(e) { showToast('備份碼格式不正確'); }
@@ -1710,6 +1827,75 @@
 
                 // ================= CRUD 操作邏輯 =================
                 
+                // 出發前待辦事項 CRUD
+                const addTodoItem = () => {
+                    const text = newTodoText.value.trim();
+                    if (!text) return;
+                    todoList.value.push({
+                        id: Date.now(),
+                        text,
+                        done: false,
+                        doneBy: ''
+                    });
+                    newTodoText.value = '';
+                    saveAllToLocal();
+                    showToast('已新增行前待辦事項！');
+                };
+
+                const toggleTodoItem = (todo) => {
+                    todo.done = !todo.done;
+                    todo.doneBy = todo.done ? currentUser.value : '';
+                    saveAllToLocal();
+                };
+
+                const deleteTodoItem = (idx) => {
+                    todoList.value.splice(idx, 1);
+                    saveAllToLocal();
+                };
+
+                // 一鍵將店舖排入行程
+                const openScheduleStoreModal = (store) => {
+                    scheduleStoreForm.value = {
+                        store,
+                        dayIndex: selectedDayIndex.value,
+                        time: store.type === 'food' ? '12:30' : '15:00',
+                        travelTime: ''
+                    };
+                    showScheduleStoreModal.value = true;
+                };
+
+                const confirmScheduleStore = () => {
+                    const { store, dayIndex, time, travelTime } = scheduleStoreForm.value;
+                    if (!store) return;
+
+                    const noteParts = [];
+                    if (store.hours) noteParts.push(`營業: ${store.hours}`);
+                    if (store.note) noteParts.push(store.note);
+
+                    const newEventObj = {
+                        id: Date.now(),
+                        type: store.type === 'food' ? 'food' : 'shop',
+                        name: store.name,
+                        naverRawInput: store.naverRawInput || store.naverUrl || store.address || '',
+                        naverQuery: store.address || '',
+                        naverUrl: store.naverUrl || '',
+                        time: time || '12:00',
+                        transport: 'train',
+                        travelTime: travelTime || '',
+                        note: noteParts.join(' · ')
+                    };
+
+                    itineraryData.value[dayIndex].events.push(newEventObj);
+                    // 依時間自動排序當天行程
+                    itineraryData.value[dayIndex].events.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+                    saveAllToLocal();
+                    showScheduleStoreModal.value = false;
+                    selectedDayIndex.value = dayIndex;
+                    currentTab.value = 'itinerary';
+                    showToast(`已將「${store.name}」排入 Day ${dayIndex + 1} 行程！`);
+                };
+
                 // 行程 CRUD
                 const openNewEventModal = () => {
                     isEditing.value = false;
@@ -1978,6 +2164,7 @@
                     localStorage.setItem(STORAGE_KEY_PREFIX + 'STORES', JSON.stringify(storeList.value));
                     localStorage.setItem(STORAGE_KEY_PREFIX + 'FLIGHTS', JSON.stringify(flightList.value));
                     localStorage.setItem(STORAGE_KEY_PREFIX + 'HOTELS', JSON.stringify(hotelList.value));
+                    localStorage.setItem(STORAGE_KEY_PREFIX + 'TODOS', JSON.stringify(todoList.value));
 
                     localStorage.setItem(`${STORAGE_KEY_PREFIX}SHOPPING_PRIVATE_${currentUser.value}`, JSON.stringify(privateShoppingList.value));
                     localStorage.setItem(`${STORAGE_KEY_PREFIX}PACKING_${currentUser.value}`, JSON.stringify(packingList.value));
@@ -1995,17 +2182,19 @@
                     isLoading, toastMessage, showToast,
                     currentTab, tabs, selectedDayIndex,
                     itineraryData, shoppingScope, privateShoppingList, sharedShoppingList, activeShoppingList,
-                    expenseList, packingList, storeList, flightList, hotelList,
+                    expenseList, packingList, storeList, flightList, hotelList, todoList, todoDoneCount, newTodoText,
                     currentDayEvents, totalExpensesKrw, totalExpensesHkd,
                     commonPoolTotal, commonPoolSpent, commonPoolRemaining, perPersonPoolInput,
                     memberBalancesKrw, memberBalancesHkd, settlementPlanKrw, settlementPlanHkd, showSettlement,
                     packingProgress,
-                    showAddEventModal, showAddShopModal, showAddExpenseModal, showPoolModal, showAddPackingModal, showAddStoreModal, showFlightModal, showHotelModal,
-                    isEditing, newEvent, newShopItem, newExpense, newPackingItem, newStore, newFlight, newHotel,
+                    showAddEventModal, showAddShopModal, showAddExpenseModal, showPoolModal, showAddPackingModal, showAddStoreModal, showFlightModal, showHotelModal, showScheduleStoreModal,
+                    isEditing, newEvent, newShopItem, newExpense, newPackingItem, newStore, newFlight, newHotel, scheduleStoreForm,
                     isEditingStore, editingStoreIndex, isEditingExpense,
                     getDayOfWeek, getDayDate, getWeatherIcon, getTrainByCategory, getCategoryBorderColor, getCategoryIcon,
                     currentWeather, isFetchingWeather, fetchLiveWeather,
                     calcKrw, exchangeRate, isFetchingRate, rateStatusText, fetchLiveRate, saveManualRate,
+                    addTodoItem, toggleTodoItem, deleteTodoItem,
+                    openScheduleStoreModal, confirmScheduleStore,
                     openNewEventModal, saveEvent, editEvent, confirmDeleteEvent, moveEvent,
                     handleImageUpload, saveShopItem, deleteShoppingItem, toggleBought,
                     openNewExpenseModal, editExpense, confirmDeleteExpenseFromModal, setExpenseCurrency, selectAllMembers, saveExpense, deleteExpense, updateTotalPoolFromPerPerson, savePoolSetting, copySettlementText, backupData,
