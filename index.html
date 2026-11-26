@@ -27,7 +27,7 @@
                     colors: {
                         'paper-white': '#FAF6ED',   // 溫暖紙砂白 (大背景)
                         'sea-blue': '#E4F1F6',      // 海風淡藍 (次要區塊/卡片底)
-                        'sunset-yellow': '#FBD76D', // 日落暖黃 (日期選中/重點按鈕)
+                        'sunset-yellow': '#FBD76D', // 日落暖黃 (日期選中/重點按鈕/景點)
                         'coral-red': '#E4776C',     // 復古朱紅 (提醒/重點強調)
                         'sky-blue': '#6EA2CE',      // 復古天藍 (主按鈕/選中Tab/進度條)
                         'forest-green': '#92C889',  // 森林嫩綠 (狀態/輔助點綴)
@@ -716,7 +716,10 @@
                 <!-- 消費明細列表 -->
                 <div class="kawaii-card rounded-2xl overflow-hidden">
                     <div class="bg-sea-blue/50 px-4 py-2.5 border-b border-dark-brown/20 flex justify-between items-center">
-                        <span class="text-xs font-bold text-dark-brown">消費紀錄明細 ({{ expenseList.length }} 筆)</span>
+                        <span class="text-xs font-bold text-dark-brown flex items-center">
+                            <img :src="trainIcons.blue" class="w-4 h-4 object-contain mr-1.5">
+                            消費紀錄明細 ({{ expenseList.length }} 筆)
+                        </span>
                         <button @click="backupData" class="text-[11px] text-warm-gray underline">備份/還原</button>
                     </div>
 
@@ -830,23 +833,27 @@
                 </button>
             </div>
 
-            <!-- 6. 店舖清單 Tab (團隊共享 - 購物改為紫色小火車與紫色標籤) -->
+            <!-- 6. 美食・購物・景點收藏庫 Tab (團隊共享) -->
             <div v-if="currentTab === 'stores'" class="pb-20">
                 <div class="space-y-4">
                     <div v-if="storeList.length === 0" class="kawaii-card rounded-2xl text-center py-12 px-4">
-                        <img :src="trainIcons.red" class="w-10 h-10 object-contain mx-auto mb-2">
-                        <p class="font-bold text-dark-brown">還沒有收藏釜山美食或店舖喔～</p>
+                        <div class="flex justify-center space-x-2 mb-2">
+                            <img :src="trainIcons.red" class="w-8 h-8 object-contain">
+                            <img :src="trainIcons.purple" class="w-8 h-8 object-contain">
+                            <img :src="trainIcons.yellow" class="w-8 h-8 object-contain">
+                        </div>
+                        <p class="font-bold text-dark-brown">還沒有收藏釜山美食、購物或景點喔～</p>
                         <p class="text-xs text-warm-gray mt-1">點擊右下角「+」儲存韓文地址，一鍵跳轉 Naver Map！</p>
                     </div>
 
-                    <div v-for="(store, index) in storeList" :key="index" class="kawaii-card rounded-2xl p-4 relative active-scale transition-transform border-l-8 cursor-pointer" :class="store.type === 'food' ? 'border-coral-red' : 'border-lavender-purple'" @click="openNaverMap(store.naverUrl || store.address || store.name)">
+                    <div v-for="(store, index) in storeList" :key="index" class="kawaii-card rounded-2xl p-4 relative active-scale transition-transform border-l-8 cursor-pointer" :class="getStoreBorderColor(store.type)" @click="openNaverMap(store.naverUrl || store.address || store.name)">
                         <div class="flex justify-between items-start pr-8">
                             <h3 class="font-bold text-lg text-dark-brown flex items-center">
-                                <img :src="store.type === 'food' ? trainIcons.red : trainIcons.purple" class="w-6 h-6 object-contain mr-2">
+                                <img :src="getStoreTrainIcon(store.type)" class="w-6 h-6 object-contain mr-2">
                                 {{ store.name }}
                             </h3>
-                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-dark-brown text-dark-brown shrink-0" :class="store.type === 'food' ? 'bg-coral-red/30' : 'bg-lavender-purple/45'">
-                                {{ store.type === 'food' ? '美食' : '購物' }}
+                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-dark-brown text-dark-brown shrink-0" :class="getStoreBadgeColor(store.type)">
+                                {{ getStoreTypeLabel(store.type) }}
                             </span>
                         </div>
                         
@@ -888,8 +895,8 @@
                     </div>
                 </div>
 
-                <!-- 新增店舖按鈕 -->
-                <button @click="showAddStoreModal = true; isEditingStore = false; newStore = { name: '', address: '', naverUrl: '', hours: '', type: 'food', note: '' }" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
+                <!-- 新增收藏按鈕 -->
+                <button @click="showAddStoreModal = true; isEditingStore = false; newStore = { name: '', naverRawInput: '', address: '', naverUrl: '', hours: '', type: 'food', note: '' }" class="fixed bottom-6 right-6 w-14 h-14 bg-sky-blue text-white rounded-full kawaii-btn flex items-center justify-center text-2xl z-30">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>
@@ -1147,13 +1154,13 @@
             </div>
         </div>
 
-        <!-- 5. 新增/編輯店舖 Modal -->
+        <!-- 5. 新增/編輯美食・購物・景點 Modal -->
         <div v-if="showAddStoreModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
-                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">{{ isEditingStore ? '編輯店舖' : '新增釜山店舖' }}</h3>
+                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">{{ isEditingStore ? '編輯收藏項目' : '新增釜山美食 / 購物 / 景點' }}</h3>
                  <div class="space-y-3">
                     <div>
-                        <label class="text-xs font-bold text-warm-gray">店名</label>
+                        <label class="text-xs font-bold text-warm-gray">名稱</label>
                         <input v-model="newStore.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none" placeholder="貼上 Naver 分享文字可自動帶入">
                     </div>
                     <div>
@@ -1172,6 +1179,7 @@
                             <select v-model="newStore.type" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
                                 <option value="food">🔴 美食</option>
                                 <option value="shop">🟣 購物</option>
+                                <option value="sight">🟡 景點</option>
                             </select>
                         </div>
                         <div class="min-w-0">
@@ -1181,7 +1189,7 @@
                     </div>
                     <div>
                         <label class="text-xs font-bold text-warm-gray">備註</label>
-                        <textarea v-model="newStore.note" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="必點菜單 / 備註..."></textarea>
+                        <textarea v-model="newStore.note" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="必點菜單 / 門票 / 備註..."></textarea>
                     </div>
                  </div>
                  <div class="flex space-x-2 mt-6">
@@ -1241,7 +1249,7 @@
             </div>
         </div>
 
-        <!-- 8. 一鍵將店舖排入行程 Modal -->
+        <!-- 8. 一鍵將收藏排入行程 Modal -->
         <div v-if="showScheduleStoreModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
                 <h3 class="text-xl font-bold mb-1 text-center text-dark-brown">排入每日行程 📅</h3>
@@ -1271,7 +1279,7 @@
                     </div>
 
                     <div class="bg-sea-blue/50 p-2.5 rounded-xl border border-dark-brown/15 text-[11px] text-dark-brown/80 space-y-1">
-                        <div><i class="fa-solid fa-check text-forest-green mr-1"></i> 自動帶入店名與 Naver Map 導航連結</div>
+                        <div><i class="fa-solid fa-check text-forest-green mr-1"></i> 自動帶入名稱與 Naver Map 導航連結</div>
                         <div v-if="scheduleStoreForm.store?.note"><i class="fa-solid fa-check text-forest-green mr-1"></i> 自動帶入備註：{{ scheduleStoreForm.store.note }}</div>
                     </div>
                 </div>
@@ -1313,7 +1321,8 @@
                     </svg>`;
                     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
                 };
-                // 直接內建五色膠囊小火車 SVG (紫色專屬購物分類與第 5 車廂備用)
+
+                // 直接內建五色膠囊小火車 SVG
                 const trainIcons = {
                     red: createTrainSvgDataUrl('#E4776C'),
                     yellow: createTrainSvgDataUrl('#FBD76D'),
@@ -1455,7 +1464,7 @@
                     { id: 'shopping', label: '購物清單', icon: 'fa-solid fa-basket-shopping' },
                     { id: 'expenses', label: '公費與分帳', icon: 'fa-solid fa-sack-dollar' },
                     { id: 'packing', label: '行李清單', icon: 'fa-solid fa-suitcase' },
-                    { id: 'stores', label: '美食與店舖', icon: 'fa-solid fa-store' }
+                    { id: 'stores', label: '美食・購物・景點', icon: 'fa-solid fa-store' }
                 ];
 
                 // 2027.04.15 - 2027.04.19 (5天4夜，預設清空行程)
@@ -1734,6 +1743,31 @@
                     return map[type] || 'border-sky-blue';
                 };
 
+                // 尾頁（美食・購物・景點收藏庫）專屬樣式與標籤輔助
+                const getStoreBorderColor = (type) => {
+                    if (type === 'food') return 'border-coral-red';
+                    if (type === 'sight') return 'border-sunset-yellow';
+                    return 'border-lavender-purple';
+                };
+
+                const getStoreBadgeColor = (type) => {
+                    if (type === 'food') return 'bg-coral-red/30';
+                    if (type === 'sight') return 'bg-sunset-yellow';
+                    return 'bg-lavender-purple/45';
+                };
+
+                const getStoreTrainIcon = (type) => {
+                    if (type === 'food') return trainIcons.red;
+                    if (type === 'sight') return trainIcons.yellow;
+                    return trainIcons.purple;
+                };
+
+                const getStoreTypeLabel = (type) => {
+                    if (type === 'food') return '美食';
+                    if (type === 'sight') return '景點';
+                    return '購物';
+                };
+
                 const getCategoryIcon = (cat) => {
                      const map = { food: 'fa-utensils', transport: 'fa-train', shopping: 'fa-bag-shopping', ticket: 'fa-ticket', hotel: 'fa-bed', other: 'fa-asterisk' };
                      return `fa-solid ${map[cat] || 'fa-asterisk'}`;
@@ -1858,12 +1892,12 @@
                     saveAllToLocal();
                 };
 
-                // 一鍵將店舖排入行程
+                // 一鍵將收藏項目排入行程
                 const openScheduleStoreModal = (store) => {
                     scheduleStoreForm.value = {
                         store,
                         dayIndex: selectedDayIndex.value,
-                        time: store.type === 'food' ? '12:30' : '15:00',
+                        time: store.type === 'food' ? '12:30' : (store.type === 'sight' ? '10:30' : '15:00'),
                         travelTime: ''
                     };
                     showScheduleStoreModal.value = true;
@@ -1877,9 +1911,11 @@
                     if (store.hours) noteParts.push(`營業: ${store.hours}`);
                     if (store.note) noteParts.push(store.note);
 
+                    const mappedEventType = store.type === 'food' ? 'food' : (store.type === 'sight' ? 'sight' : 'shop');
+
                     const newEventObj = {
                         id: Date.now(),
-                        type: store.type === 'food' ? 'food' : 'shop',
+                        type: mappedEventType,
                         name: store.name,
                         naverRawInput: store.naverRawInput || store.naverUrl || store.address || '',
                         naverQuery: store.address || '',
@@ -2100,7 +2136,7 @@
                     saveAllToLocal();
                 };
 
-                // 店舖 CRUD
+                // 店舖 / 景點 CRUD
                 const saveStore = () => {
                     if (!newStore.value.name) return;
                     if (isEditingStore.value) {
@@ -2111,7 +2147,7 @@
                     saveAllToLocal();
                     showAddStoreModal.value = false;
                     newStore.value = { name: '', naverRawInput: '', address: '', naverUrl: '', hours: '', type: 'food', note: '' };
-                    showToast('已儲存店舖資訊！');
+                    showToast('已儲存收藏項目！');
                 };
 
                 const editStore = (index) => {
@@ -2130,7 +2166,7 @@
                     storeList.value.splice(editingStoreIndex.value, 1);
                     saveAllToLocal();
                     showAddStoreModal.value = false;
-                    showToast('已刪除店舖');
+                    showToast('已刪除收藏項目');
                 };
 
                 // 航班與住宿 CRUD
@@ -2196,6 +2232,7 @@
                     isEditing, newEvent, newShopItem, newExpense, newPackingItem, newStore, newFlight, newHotel, scheduleStoreForm,
                     isEditingStore, editingStoreIndex, isEditingExpense,
                     getDayOfWeek, getDayDate, getWeatherIcon, getTrainByCategory, getCategoryBorderColor, getCategoryIcon,
+                    getStoreBorderColor, getStoreBadgeColor, getStoreTrainIcon, getStoreTypeLabel,
                     currentWeather, isFetchingWeather, fetchLiveWeather,
                     calcKrw, exchangeRate, isFetchingRate, rateStatusText, fetchLiveRate, saveManualRate,
                     addTodoItem, toggleTodoItem, deleteTodoItem,
