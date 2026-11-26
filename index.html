@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>釜山之旅</title>
+    <title>釜山之 🌊</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -162,15 +162,15 @@
 
         <!-- ================= 頁首區塊 ================= -->
         <header class="relative shrink-0 z-20">
-            <!-- 圖片容器 -->
-            <div class="header-curve h-48 md:h-64 relative bg-sea-blue cursor-pointer" @click="openBannerModal">
+            <!-- 圖片容器：鎖定原圖 1000x424 比例，完整顯示不上下裁切 -->
+            <div class="header-curve w-full aspect-[1000/424] max-h-72 relative bg-sea-blue cursor-pointer" @click="openBannerModal">
                 <img :src="bannerImage" @error="handleBannerError" class="w-full h-full object-cover" alt="Busan Banner">
-                <div class="absolute inset-0 bg-gradient-to-t from-dark-brown/45 via-transparent to-transparent"></div>
-                <div class="absolute bottom-6 left-5 text-white drop-shadow-[0_2px_4px_rgba(78,54,41,0.8)]">
-                    <h1 class="text-2xl font-bold tracking-widest flex items-center">
-                        探索釜山文化
+                <div class="absolute inset-0 bg-gradient-to-b from-dark-brown/30 via-transparent to-dark-brown/20"></div>
+                <div class="absolute top-4 right-5 text-right text-white drop-shadow-[0_2px_4px_rgba(78,54,41,0.85)]">
+                    <h1 class="text-xl md:text-2xl font-bold tracking-widest flex items-center justify-end">
+                        探索釜山文化遊
                     </h1>
-                    <p class="text-xs md:text-sm font-medium opacity-95 mt-0.5">2027.04.15 - 04.19 </p>
+                    <p class="text-[11px] md:text-sm font-medium opacity-95 mt-0.5">2027.04.15 - 04.19</p>                
                 </div>
             </div>
 
@@ -855,7 +855,7 @@
                         </div>
                     </div>
                     
-                    <!-- 付款來源選擇 (公費池 vs 個人代墊) -->
+                    <!-- 付款來源選擇 (公費 vs 個人代墊) -->
                     <div>
                         <label class="text-xs font-bold text-warm-gray block mb-1">誰先付款？</label>
                         <div class="grid grid-cols-3 gap-1.5 text-xs font-bold">
@@ -907,7 +907,7 @@
             </div>
         </div>
 
-        <!-- 3.5 設定公費池 Modal -->
+        <!-- 3.5 設定公費 Modal -->
         <div v-if="showPoolModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
                 <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定四人公費 💰</h3>
@@ -1237,7 +1237,7 @@
                     return expenseList.value.reduce((sum, item) => sum + parseInt(item.amount || 0), 0);
                 });
 
-                // 公費池已花費與剩餘計算
+                // 公費已花費與剩餘計算
                 const commonPoolSpent = computed(() => {
                     return expenseList.value
                         .filter(item => item.payer === 'POOL')
@@ -1371,7 +1371,7 @@
                     return packingList.value.filter(item => item.type === type);
                 };
 
-                // 公費池設定
+                // 公費設定
                 const updateTotalPoolFromPerPerson = () => {
                     if (perPersonPoolInput.value >= 0) {
                         commonPoolTotal.value = perPersonPoolInput.value * 4;
