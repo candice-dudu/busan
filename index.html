@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>釜山之旅🌊</title>
-     <link rel="apple-touch-icon" href="busanapp.jpg">
-    <meta name="apple-mobile-web-app-title" content="BusanTrip">
+    <title>釜山之旅</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,9 +50,9 @@
             scrollbar-width: none;
         }
         
-        /* 頁首圖片圓弧遮罩效果 */
+        /* 頁首圖片直角遮罩效果 */
         .header-curve {
-            border-radius: 0 0 36px 36px; 
+            border-radius: 0; 
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(78, 54, 41, 0.08);
             border-bottom: 2px solid #4E3629;
@@ -170,9 +168,9 @@
                 <div class="absolute inset-0 bg-gradient-to-t from-dark-brown/45 via-transparent to-transparent"></div>
                 <div class="absolute bottom-6 left-5 text-white drop-shadow-[0_2px_4px_rgba(78,54,41,0.8)]">
                     <h1 class="text-2xl font-bold tracking-widest flex items-center">
-                        探索釜山文化 🌊
+                        探索釜山文化
                     </h1>
-                    <p class="text-xs md:text-sm font-medium opacity-95 mt-0.5">2027.04.15 - 04.19</p>
+                    <p class="text-xs md:text-sm font-medium opacity-95 mt-0.5">2027.04.15 - 04.19 </p>
                 </div>
             </div>
 
@@ -277,7 +275,7 @@
                                 <!-- 應用 1：依分類顯示對應膠囊小火車 -->
                                 <img :src="getTrainByCategory(event.type)" class="w-8 h-8 object-contain shrink-0 mt-0.5">
                                 
-                                <div class="flex-1 pr-6">
+                                <div class="flex-1 pr-6 min-w-0">
                                     <div class="flex justify-between items-start mb-1">
                                         <h3 class="font-bold text-lg text-dark-brown leading-snug">{{ event.name }}</h3>
                                         <span class="text-xs font-mono font-bold bg-sea-blue text-dark-brown px-2 py-0.5 rounded-lg border border-dark-brown/30 ml-2 shrink-0">{{ event.time }}</span>
@@ -339,14 +337,14 @@
                     </div>
 
                     <div class="flex items-center space-x-2 bg-paper-white border-2 border-dark-brown/20 rounded-xl p-3">
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <label class="text-xs text-warm-gray font-bold block">韓元 (KRW ₩)</label>
-                            <input type="number" v-model="calcKrw" class="w-full bg-transparent font-bold text-xl text-dark-brown outline-none mt-0.5" placeholder="10000">
+                            <input type="number" v-model="calcKrw" class="w-full min-w-0 bg-transparent font-bold text-xl text-dark-brown outline-none mt-0.5" placeholder="10000">
                         </div>
-                        <i class="fa-solid fa-arrow-right text-sky-blue text-lg"></i>
-                        <div class="flex-1 text-right">
+                        <i class="fa-solid fa-arrow-right text-sky-blue text-lg shrink-0"></i>
+                        <div class="flex-1 text-right min-w-0">
                             <label class="text-xs text-warm-gray font-bold block">港幣 (HKD $)</label>
-                            <div class="font-bold text-xl text-coral-red mt-0.5">
+                            <div class="font-bold text-xl text-coral-red mt-0.5 truncate">
                                 ${{ calcKrw ? (calcKrw * exchangeRate).toFixed(1) : '0.0' }}
                             </div>
                         </div>
@@ -510,14 +508,14 @@
                             <div class="text-xs opacity-90 mt-0.5">約 HKD ${{ (totalExpenses * exchangeRate).toFixed(0) }}</div>
                         </div>
                         <button @click="showPoolModal = true" class="bg-sunset-yellow text-dark-brown text-xs font-bold px-3 py-1.5 rounded-full border-2 border-dark-brown shadow-sm active-scale">
-                            設定公費池
+                            設定公費
                         </button>
                     </div>
 
-                    <!-- 公費池狀態條 -->
+                    <!-- 公費狀態條 -->
                     <div class="mt-4 pt-3 border-t border-white/30 flex justify-between items-center text-xs">
                         <div>
-                            <span class="opacity-85">公費池總額：</span>
+                            <span class="opacity-85">公費總額：</span>
                             <span class="font-bold">₩{{ commonPoolTotal.toLocaleString() }}</span>
                         </div>
                         <div>
@@ -748,19 +746,19 @@
                 <div class="space-y-3">
                     <div>
                         <label class="text-xs font-bold text-warm-gray">景點 / 活動名稱</label>
-                        <input v-model="newEvent.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-sky-blue" placeholder="例: 海雲台藍線公園膠囊列車">
+                        <input v-model="newEvent.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-sky-blue" placeholder="例: 海雲台藍線公園膠囊列車">
                     </div>
                     <div>
                         <label class="text-xs font-bold text-warm-gray flex items-center justify-between">
                             <span>Naver Map 地址 / 韓文店名 / 分享連結</span>
                             <span class="text-[10px] text-[#029E47] font-bold">支援 naver.me 連結</span>
                         </label>
-                        <input v-model="newEvent.naverQuery" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-[#03C75A] text-xs" placeholder="貼上韓文地址、韓文店名或 https://naver.me/...">
+                        <input v-model="newEvent.naverQuery" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-[#03C75A] text-xs" placeholder="貼上韓文地址、韓文店名或 https://naver.me/...">
                     </div>
-                    <div class="flex space-x-2">
-                         <div class="flex-1">
+                    <div class="grid grid-cols-2 gap-2">
+                         <div class="min-w-0">
                             <label class="text-xs font-bold text-warm-gray">分類 (對應小火車)</label>
-                            <select v-model="newEvent.type" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none">
+                            <select v-model="newEvent.type" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none">
                                 <option value="sight">🟡 景點</option>
                                 <option value="food">🟢 美食</option>
                                 <option value="shop">🟡 購物</option>
@@ -769,24 +767,24 @@
                                 <option value="other">🟢 其他</option>
                             </select>
                          </div>
-                         <div class="flex-1">
+                         <div class="min-w-0">
                             <label class="text-xs font-bold text-warm-gray">時間</label>
-                            <input type="time" v-model="newEvent.time" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none">
+                            <input type="time" v-model="newEvent.time" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none">
                          </div>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-warm-gray">交通方式與時間</label>
-                         <div class="flex space-x-2 mt-1">
-                            <select v-model="newEvent.transport" class="bg-white border border-dark-brown/30 rounded-xl p-2.5 text-sm outline-none">
+                         <div class="flex space-x-2 items-center mt-1">
+                            <select v-model="newEvent.transport" class="shrink-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 text-sm outline-none">
                                 <option value="train">地鐵 / 巴士</option>
                                 <option value="walk">步行</option>
                             </select>
-                            <input v-model="newEvent.travelTime" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="例: 20 min">
+                            <input v-model="newEvent.travelTime" class="flex-1 min-w-0 w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="例: 20 min">
                         </div>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-warm-gray">備註 / 預約資訊</label>
-                        <textarea v-model="newEvent.note" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="備註..."></textarea>
+                        <textarea v-model="newEvent.note" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="備註..."></textarea>
                     </div>
                 </div>
 
@@ -805,7 +803,7 @@
         <div v-if="showAddShopModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
              <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">想在釜山買什麼？</h3>
-                <input v-model="newShopItem.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-3 mb-4 outline-none" placeholder="商品名稱 (例: 膠原蛋白果凍)">
+                <input v-model="newShopItem.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-3 mb-4 outline-none" placeholder="商品名稱 (例: 膠原蛋白果凍)">
                 
                 <label class="block w-full bg-white rounded-xl p-6 text-center border-2 border-dashed border-dark-brown/40 cursor-pointer mb-4 hover:bg-sea-blue/30 transition-colors">
                     <i class="fa-solid fa-camera text-2xl text-sky-blue mb-2"></i>
@@ -826,10 +824,10 @@
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl my-auto">
                  <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">新增花費 / 分帳</h3>
                  <div class="space-y-3">
-                    <div class="flex space-x-2">
-                        <div class="flex-1">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
                             <label class="text-xs font-bold text-warm-gray">分類</label>
-                            <select v-model="newExpense.category" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
+                            <select v-model="newExpense.category" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
                                 <option value="food">飲食</option>
                                 <option value="transport">交通</option>
                                 <option value="shopping">購物</option>
@@ -838,20 +836,20 @@
                                 <option value="other">其他</option>
                             </select>
                         </div>
-                        <div class="flex-1">
+                        <div class="min-w-0">
                             <label class="text-xs font-bold text-warm-gray">日期</label>
-                            <input type="date" v-model="newExpense.date" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
+                            <input type="date" v-model="newExpense.date" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
                         </div>
                     </div>
 
                     <div>
                         <label class="text-xs font-bold text-warm-gray">消費項目</label>
-                        <input v-model="newExpense.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none" placeholder="例: 伍班長烤肉">
+                        <input v-model="newExpense.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none" placeholder="例: 伍班長烤肉">
                     </div>
 
                     <div>
                         <label class="text-xs font-bold text-warm-gray">金額 (韓元 KRW ₩)</label>
-                        <input type="number" v-model="newExpense.amount" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 font-bold text-lg font-mono outline-none" placeholder="₩ 50000">
+                        <input type="number" v-model="newExpense.amount" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 font-bold text-lg font-mono outline-none" placeholder="₩ 50000">
                         <div v-if="newExpense.amount" class="text-right text-xs text-sky-blue font-bold mt-1">
                             約折合 HKD ${{ (newExpense.amount * exchangeRate).toFixed(1) }}
                         </div>
@@ -864,7 +862,7 @@
                             <button type="button" @click="newExpense.payer = 'POOL'" 
                                 :class="newExpense.payer === 'POOL' ? 'bg-sunset-yellow text-dark-brown border-dark-brown' : 'bg-white text-warm-gray border-dark-brown/20'"
                                 class="py-2 rounded-xl border-2 transition-all">
-                                💰 公費池
+                                💰 公費
                             </button>
                             <button v-for="m in members" :key="m" type="button" @click="newExpense.payer = m"
                                 :class="newExpense.payer === m ? 'bg-sky-blue text-white border-dark-brown' : 'bg-white text-warm-gray border-dark-brown/20'"
@@ -899,7 +897,7 @@
                     </div>
 
                     <div>
-                        <input v-model="newExpense.note" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 text-xs outline-none" placeholder="備註 (選填)...">
+                        <input v-model="newExpense.note" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 text-xs outline-none" placeholder="備註 (選填)...">
                     </div>
                  </div>
                  <div class="flex space-x-2 mt-5">
@@ -912,17 +910,17 @@
         <!-- 3.5 設定公費池 Modal -->
         <div v-if="showPoolModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
-                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定四人公費池 💰</h3>
+                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定四人公費 💰</h3>
                 <p class="text-xs text-warm-gray text-center mb-4">輸入出發前大家夾錢放入公費的總韓元金額</p>
                 
                 <div class="space-y-3">
                     <div>
                         <label class="text-xs font-bold text-warm-gray">每人投入金額 (KRW)</label>
-                        <input type="number" v-model.number="perPersonPoolInput" @input="updateTotalPoolFromPerPerson" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 font-mono font-bold outline-none" placeholder="例: 300000">
+                        <input type="number" v-model.number="perPersonPoolInput" @input="updateTotalPoolFromPerPerson" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 font-mono font-bold outline-none" placeholder="例: 300000">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-warm-gray">公費池總額 (4人合計 KRW)</label>
-                        <input type="number" v-model.number="commonPoolTotal" class="w-full bg-sea-blue/60 border-2 border-dark-brown rounded-xl p-2.5 mt-1 font-mono font-bold text-lg outline-none">
+                        <label class="text-xs font-bold text-warm-gray">公費總額 (4人合計 KRW)</label>
+                        <input type="number" v-model.number="commonPoolTotal" class="w-full min-w-0 bg-sea-blue/60 border-2 border-dark-brown rounded-xl p-2.5 mt-1 font-mono font-bold text-lg outline-none">
                     </div>
                 </div>
 
@@ -937,7 +935,7 @@
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
                  <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">帶什麼去釜山？</h3>
                  <div class="space-y-4">
-                    <input v-model="newPackingItem.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-3 outline-none" placeholder="物品名稱 (例: WOWPASS / 轉插)">
+                    <input v-model="newPackingItem.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-3 outline-none" placeholder="物品名稱 (例: WOWPASS / 轉插)">
                     
                     <div class="flex space-x-2">
                         <label class="flex-1 bg-white p-3 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all border-2" :class="newPackingItem.type === 'carry_on' ? 'border-dark-brown bg-sunset-yellow/50 text-dark-brown' : 'border-dark-brown/20 text-warm-gray'">
@@ -966,31 +964,31 @@
                  <div class="space-y-3">
                     <div>
                         <label class="text-xs font-bold text-warm-gray">店名</label>
-                        <input v-model="newStore.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none" placeholder="例: 密陽血腸豬肉湯飯">
+                        <input v-model="newStore.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none" placeholder="例: 密陽血腸豬肉湯飯">
                     </div>
                     <div>
                         <label class="text-xs font-bold text-warm-gray flex items-center justify-between">
                             <span>地址 / Naver Map 分享連結</span>
                             <span class="text-[10px] text-[#029E47] font-bold">點擊卡片跳轉 Naver</span>
                         </label>
-                        <input v-model="newStore.address" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-[#03C75A] text-xs" placeholder="貼上韓文地址或 https://naver.me/...">
+                        <input v-model="newStore.address" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none focus:border-[#03C75A] text-xs" placeholder="貼上韓文地址或 https://naver.me/...">
                     </div>
-                    <div class="flex space-x-2">
-                        <div class="flex-1">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
                             <label class="text-xs font-bold text-warm-gray">種類</label>
-                            <select v-model="newStore.type" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
+                            <select v-model="newStore.type" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
                                 <option value="food">美食</option>
                                 <option value="shop">購物</option>
                             </select>
                         </div>
-                        <div class="flex-1">
+                        <div class="min-w-0">
                             <label class="text-xs font-bold text-warm-gray">營業時間</label>
-                            <input v-model="newStore.hours" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none" placeholder="10:00 - 22:00">
+                            <input v-model="newStore.hours" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none" placeholder="10:00 - 22:00">
                         </div>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-warm-gray">備註</label>
-                        <textarea v-model="newStore.note" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="必點菜單 / 備註..."></textarea>
+                        <textarea v-model="newStore.note" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 h-16 mt-1 outline-none" placeholder="必點菜單 / 備註..."></textarea>
                     </div>
                  </div>
                  <div class="flex space-x-2 mt-6">
@@ -1001,24 +999,24 @@
             </div>
         </div>
 
-        <!-- 6. 新增航班 Modal -->
+        <!-- 6. 新增航班 Modal (已修復 iOS Safari 並排輸入框超出邊界問題) -->
         <div v-if="showFlightModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">新增航班資訊 ✈️</h3>
                 <div class="space-y-3 text-xs">
-                    <div class="flex space-x-2">
-                        <input v-model="newFlight.label" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="例: 去程 (15/4)">
-                        <input v-model="newFlight.code" class="w-28 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="航班號 UO674">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input v-model="newFlight.label" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="例: 去程 (15/4)">
+                        <input v-model="newFlight.code" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="航班號 UO674">
                     </div>
-                    <div class="flex space-x-2">
-                        <input v-model="newFlight.depAirport" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="出發 HKG">
-                        <input type="time" v-model="newFlight.depTime" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input v-model="newFlight.depAirport" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="出發 HKG">
+                        <input type="time" v-model="newFlight.depTime" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none">
                     </div>
-                    <div class="flex space-x-2">
-                        <input v-model="newFlight.arrAirport" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="抵達 PUS">
-                        <input type="time" v-model="newFlight.arrTime" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input v-model="newFlight.arrAirport" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none uppercase" placeholder="抵達 PUS">
+                        <input type="time" v-model="newFlight.arrTime" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none">
                     </div>
-                    <input v-model="newFlight.duration" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飛行時間 (例: 3h 25m)">
+                    <input v-model="newFlight.duration" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飛行時間 (例: 3h 25m)">
                 </div>
                 <div class="flex space-x-2 mt-5">
                     <button @click="showFlightModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
@@ -1032,13 +1030,13 @@
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
                 <h3 class="text-xl font-bold mb-4 text-center text-dark-brown">新增住宿資訊 🏨</h3>
                 <div class="space-y-3 text-xs">
-                    <input v-model="newHotel.name" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飯店名稱 (例: 海雲台新羅舒泰酒店)">
-                    <input v-model="newHotel.dates" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="入住日期 (例: 15/4 - 17/4)">
-                    <div class="flex space-x-2">
-                        <input v-model="newHotel.checkIn" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="In: 15:00">
-                        <input v-model="newHotel.checkOut" class="flex-1 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="Out: 11:00">
+                    <input v-model="newHotel.name" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飯店名稱 (例: 海雲台新羅舒泰酒店)">
+                    <input v-model="newHotel.dates" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="入住日期 (例: 15/4 - 17/4)">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input v-model="newHotel.checkIn" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="In: 15:00">
+                        <input v-model="newHotel.checkOut" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="Out: 11:00">
                     </div>
-                    <input v-model="newHotel.address" class="w-full bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飯店地址 / 鄰近地鐵站">
+                    <input v-model="newHotel.address" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 outline-none" placeholder="飯店地址 / 鄰近地鐵站">
                 </div>
                 <div class="flex space-x-2 mt-5">
                     <button @click="showHotelModal = false" class="flex-1 bg-white border-2 border-dark-brown py-2.5 rounded-xl font-bold text-warm-gray">取消</button>
@@ -1055,7 +1053,7 @@
 
         createApp({
             setup() {
-                const STORAGE_KEY_PREFIX = '_2027_';
+                const STORAGE_KEY_PREFIX = 'BUSAN_2027_';
                 const members = ['Candice', 'Carmen', 'Christy', 'Tung'];
 
                 // 精緻還原刺繡章膠囊小火車造型 (含凸起車頂、大車窗、左右側窗、黃色車燈、粉紅愛心與小黑輪)
@@ -1382,7 +1380,7 @@
                 const savePoolSetting = () => {
                     saveAllToLocal();
                     showPoolModal.value = false;
-                    showToast('已更新四人公費池總額！');
+                    showToast('已更新四人公費總額！');
                 };
 
                 // 複製分帳明細至剪貼簿
@@ -1390,7 +1388,7 @@
                     let text = `🌊 釜山之旅 (2027.04.15-19) 記帳結算\n`;
                     text += `━━━━━━━━━━━━━━\n`;
                     text += `總花費：₩${totalExpenses.value.toLocaleString()} (約 HKD $${(totalExpenses.value * exchangeRate.value).toFixed(0)})\n`;
-                    text += `公費池剩餘：₩${commonPoolRemaining.value.toLocaleString()}\n\n`;
+                    text += `公費剩餘：₩${commonPoolRemaining.value.toLocaleString()}\n\n`;
                     text += `💡 個人代墊結算轉帳：\n`;
                     if (settlementPlan.value.length === 0) {
                         text += `目前帳目已扯平，無需轉帳！✨`;
