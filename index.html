@@ -31,6 +31,7 @@
                         'coral-red': '#E4776C',     // 復古朱紅 (提醒/重點強調)
                         'sky-blue': '#6EA2CE',      // 復古天藍 (主按鈕/選中Tab/進度條)
                         'forest-green': '#92C889',  // 森林嫩綠 (狀態/輔助點綴)
+                        'lavender-purple': '#B39CD0', // 薰衣草粉紫 (購物專屬色)
                         'dark-brown': '#4E3629',    // 深茶褐 (文字/手繪邊框，代替純黑)
                         'warm-gray': '#8C7D73'      // 灰褐 (輔助文字)
                     },
@@ -103,9 +104,10 @@
             animation: cuteBounce 1.2s ease-in-out infinite;
         }
         .bouncing-train.delay-1 { animation-delay: 0s; }
-        .bouncing-train.delay-2 { animation-delay: 0.15s; }
-        .bouncing-train.delay-3 { animation-delay: 0.3s; }
-        .bouncing-train.delay-4 { animation-delay: 0.45s; }
+        .bouncing-train.delay-2 { animation-delay: 0.12s; }
+        .bouncing-train.delay-3 { animation-delay: 0.24s; }
+        .bouncing-train.delay-4 { animation-delay: 0.36s; }
+        .bouncing-train.delay-5 { animation-delay: 0.48s; }
 
         /* ================= 應用 5：Hover 互動微動畫按鈕 ================= */
         .hover-train-btn {
@@ -143,13 +145,14 @@
 
     <div id="app" class="h-full flex flex-col relative">
         
-        <!-- ================= 應用 4：雲端同步/加載畫面 (預留給 Firebase 使用) ================= -->
+        <!-- ================= 應用 4：雲端同步/加載畫面 (五輛小火車列隊) ================= -->
         <div v-if="isLoading" class="fixed inset-0 bg-paper-white/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-            <div class="flex space-x-3 border-b-4 border-dashed border-dark-brown pb-2 px-4 mb-3">
-                <img :src="trainIcons.red" class="w-9 h-9 object-contain bouncing-train delay-1" alt="紅火車">
-                <img :src="trainIcons.yellow" class="w-9 h-9 object-contain bouncing-train delay-2" alt="黃火車">
-                <img :src="trainIcons.green" class="w-9 h-9 object-contain bouncing-train delay-3" alt="綠火車">
-                <img :src="trainIcons.blue" class="w-9 h-9 object-contain bouncing-train delay-4" alt="藍火車">
+            <div class="flex space-x-2.5 border-b-4 border-dashed border-dark-brown pb-2 px-4 mb-3">
+                <img :src="trainIcons.red" class="w-8 h-8 object-contain bouncing-train delay-1" alt="紅火車">
+                <img :src="trainIcons.yellow" class="w-8 h-8 object-contain bouncing-train delay-2" alt="黃火車">
+                <img :src="trainIcons.green" class="w-8 h-8 object-contain bouncing-train delay-3" alt="綠火車">
+                <img :src="trainIcons.blue" class="w-8 h-8 object-contain bouncing-train delay-4" alt="藍火車">
+                <img :src="trainIcons.purple" class="w-8 h-8 object-contain bouncing-train delay-5" alt="紫火車">
             </div>
             <p class="font-bold text-dark-brown tracking-wider text-sm">小火車載入行程中...</p>
         </div>
@@ -246,14 +249,15 @@
                     </div>
                 </div>
 
-                <!-- 行程列表 (應用 1：小火車時間軸路線標記) -->
+                <!-- 行程列表 (應用 1：五色小火車時間軸路線標記) -->
                 <div class="space-y-4 pb-16">
                     <div v-if="currentDayEvents.length === 0" class="kawaii-card rounded-2xl text-center py-10 px-4">
                         <div class="flex justify-center space-x-2 mb-3">
-                            <img :src="trainIcons.red" class="w-8 h-8 object-contain">
-                            <img :src="trainIcons.yellow" class="w-8 h-8 object-contain">
-                            <img :src="trainIcons.green" class="w-8 h-8 object-contain">
-                            <img :src="trainIcons.blue" class="w-8 h-8 object-contain">
+                            <img :src="trainIcons.red" class="w-7 h-7 object-contain">
+                            <img :src="trainIcons.yellow" class="w-7 h-7 object-contain">
+                            <img :src="trainIcons.green" class="w-7 h-7 object-contain">
+                            <img :src="trainIcons.blue" class="w-7 h-7 object-contain">
+                            <img :src="trainIcons.purple" class="w-7 h-7 object-contain">
                         </div>
                         <p class="font-bold text-dark-brown">今天還沒有安排行程喔～</p>
                         <p class="text-xs text-warm-gray mt-1">點擊右下角「+」號開始規劃釜山之旅！</p>
@@ -327,12 +331,12 @@
             <!-- 2. 資訊 Tab (出發前待辦 + 自動網路匯率 + 可編輯航班住宿 + 韓國緊急電話) -->
             <div v-if="currentTab === 'info'" class="space-y-6 pb-10">
                 
-                <!-- 出發前四人待辦事項 (To-Do / 搶票提醒) -->
+                <!-- 出發前團隊待辦事項 (To-Do / 搶票提醒) -->
                 <section class="kawaii-card rounded-2xl p-5">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="font-bold text-dark-brown flex items-center">
                             <img :src="trainIcons.green" class="w-6 h-6 object-contain mr-2">
-                            出發前四人待辦事項
+                            出發前待辦事項
                         </h3>
                         <span class="text-xs font-bold bg-sea-blue text-dark-brown px-2.5 py-0.5 rounded-full border border-dark-brown/30">
                             {{ todoDoneCount }}/{{ todoList.length }} 完成
@@ -524,13 +528,13 @@
                 </section>
             </div>
 
-            <!-- 3. 購物清單 Tab (支援私人清單 + 四人共享清單切換) -->
+            <!-- 3. 購物清單 Tab (支援私人清單 + 共享清單切換) -->
             <div v-if="currentTab === 'shopping'" class="pb-20 space-y-4">
                 <!-- 私人 vs 共享切換標籤 -->
                 <div class="bg-white p-1.5 rounded-2xl border-2 border-dark-brown flex space-x-1.5 shadow-xs">
                     <button 
                         @click="shoppingScope = 'private'"
-                        :class="shoppingScope === 'private' ? 'bg-sunset-yellow text-dark-brown border-dark-brown shadow-[0_2px_0_#4E3629]' : 'bg-transparent text-warm-gray border-transparent'"
+                        :class="shoppingScope === 'private' ? 'bg-sundet-yellow text-dark-brown border-dark-brown shadow-[0_2px_0_#4E3629]' : 'bg-transparent text-warm-gray border-transparent'"
                         class="flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center space-x-1.5"
                     >
                         <i class="fa-solid fa-lock text-[11px]"></i>
@@ -562,7 +566,7 @@
                         
                         <div class="aspect-square bg-paper-white rounded-xl mb-2 overflow-hidden flex items-center justify-center border border-dark-brown/15">
                             <img v-if="item.image" :src="item.image" class="w-full h-full object-cover">
-                            <i v-else class="fa-solid fa-bag-shopping text-sky-blue/40 text-3xl"></i>
+                            <i v-else class="fa-solid fa-bag-shopping text-lavender-purple/60 text-3xl"></i>
                         </div>
                         <div class="font-bold text-sm text-center text-dark-brown">{{ item.name }}</div>
                         <div v-if="shoppingScope === 'shared' && item.addedBy" class="text-[10px] text-center text-sky-blue font-bold mt-0.5">
@@ -621,7 +625,7 @@
                     </div>
                 </div>
 
-                <!-- 雙幣別四人代墊自動結算面板 -->
+                <!-- 雙幣別代墊自動結算面板 -->
                 <div class="kawaii-card rounded-2xl p-4">
                     <div class="flex justify-between items-center cursor-pointer" @click="showSettlement = !showSettlement">
                         <h3 class="font-bold text-dark-brown text-sm flex items-center">
@@ -635,7 +639,7 @@
 
                     <div v-if="showSettlement" class="mt-3 pt-3 border-t border-dashed border-dark-brown/20 space-y-3">
                         
-                        <!-- 四人各自淨收支總覽四格卡片 (支援港幣 + 韓元雙幣顯示) -->
+                        <!-- 成員各自淨收支總覽卡片 (支援港幣 + 韓元雙幣顯示) -->
                         <div class="grid grid-cols-2 gap-2">
                             <div v-for="member in members" :key="member" class="bg-paper-white p-2.5 rounded-xl border border-dark-brown/20 flex flex-col justify-between">
                                 <div class="text-xs font-bold text-dark-brown mb-1 flex items-center justify-between">
@@ -826,7 +830,7 @@
                 </button>
             </div>
 
-            <!-- 6. 店舖清單 Tab (四人共享) -->
+            <!-- 6. 店舖清單 Tab (團隊共享 - 購物改為紫色小火車與紫色標籤) -->
             <div v-if="currentTab === 'stores'" class="pb-20">
                 <div class="space-y-4">
                     <div v-if="storeList.length === 0" class="kawaii-card rounded-2xl text-center py-12 px-4">
@@ -835,13 +839,13 @@
                         <p class="text-xs text-warm-gray mt-1">點擊右下角「+」儲存韓文地址，一鍵跳轉 Naver Map！</p>
                     </div>
 
-                    <div v-for="(store, index) in storeList" :key="index" class="kawaii-card rounded-2xl p-4 relative active-scale transition-transform border-l-8 cursor-pointer" :class="store.type === 'food' ? 'border-coral-red' : 'border-sunset-yellow'" @click="openNaverMap(store.naverUrl || store.address || store.name)">
+                    <div v-for="(store, index) in storeList" :key="index" class="kawaii-card rounded-2xl p-4 relative active-scale transition-transform border-l-8 cursor-pointer" :class="store.type === 'food' ? 'border-coral-red' : 'border-lavender-purple'" @click="openNaverMap(store.naverUrl || store.address || store.name)">
                         <div class="flex justify-between items-start pr-8">
                             <h3 class="font-bold text-lg text-dark-brown flex items-center">
-                                <img :src="store.type === 'food' ? trainIcons.red : trainIcons.yellow" class="w-6 h-6 object-contain mr-2">
+                                <img :src="store.type === 'food' ? trainIcons.red : trainIcons.purple" class="w-6 h-6 object-contain mr-2">
                                 {{ store.name }}
                             </h3>
-                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-dark-brown text-dark-brown shrink-0" :class="store.type === 'food' ? 'bg-coral-red/30' : 'bg-sunset-yellow'">
+                            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-dark-brown text-dark-brown shrink-0" :class="store.type === 'food' ? 'bg-coral-red/30' : 'bg-lavender-purple/45'">
                                 {{ store.type === 'food' ? '美食' : '購物' }}
                             </span>
                         </div>
@@ -920,7 +924,7 @@
                             <select v-model="newEvent.type" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 outline-none text-sm">
                                 <option value="sight">🟡 景點</option>
                                 <option value="food">🟢 美食</option>
-                                <option value="shop">🟡 購物</option>
+                                <option value="shop">🟣 購物</option>
                                 <option value="hotel">🔵 住宿</option>
                                 <option value="flight">🔴 航班 / 交通</option>
                                 <option value="other">🟢 其他</option>
@@ -1061,7 +1065,7 @@
                     <div v-if="newExpense.payer !== 'POOL'" class="bg-sea-blue/50 p-3 rounded-xl border border-dark-brown/20">
                         <div class="flex justify-between items-center mb-1.5">
                             <label class="text-xs font-bold text-dark-brown">分攤成員：</label>
-                            <button type="button" @click="selectAllMembers" class="text-[11px] text-sky-blue font-bold underline">全選 4 人</button>
+                            <button type="button" @click="selectAllMembers" class="text-[11px] text-sky-blue font-bold underline">全選 {{ members.length }} 人</button>
                         </div>
                         <div class="grid grid-cols-2 gap-1.5 text-xs">
                             <label v-for="m in members" :key="m" class="flex items-center space-x-2 bg-white px-2.5 py-1.5 rounded-lg border border-dark-brown/15 cursor-pointer">
@@ -1096,7 +1100,7 @@
         <!-- 3.5 設定韓元公費池 Modal -->
         <div v-if="showPoolModal" class="fixed inset-0 bg-dark-brown/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <div class="bg-paper-white border-2 border-dark-brown rounded-3xl w-full max-w-sm p-6 shadow-2xl">
-                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定四人韓元公費池 💰</h3>
+                <h3 class="text-xl font-bold mb-2 text-center text-dark-brown">設定{{ members.length }}人韓元公費池 💰</h3>
                 <p class="text-xs text-warm-gray text-center mb-4">輸入出發前大家夾錢放入公費的總韓元金額</p>
                 
                 <div class="space-y-3">
@@ -1105,7 +1109,7 @@
                         <input type="number" v-model.number="perPersonPoolInput" @input="updateTotalPoolFromPerPerson" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2.5 mt-1 font-mono font-bold outline-none" placeholder="例: 300000">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-warm-gray">公費池總額 (4人合計 KRW)</label>
+                        <label class="text-xs font-bold text-warm-gray">公費池總額 ({{ members.length }}人合計 KRW)</label>
                         <input type="number" v-model.number="commonPoolTotal" class="w-full min-w-0 bg-sea-blue/60 border-2 border-dark-brown rounded-xl p-2.5 mt-1 font-mono font-bold text-lg outline-none">
                     </div>
                 </div>
@@ -1166,8 +1170,8 @@
                         <div class="min-w-0">
                             <label class="text-xs font-bold text-warm-gray">種類</label>
                             <select v-model="newStore.type" class="w-full min-w-0 bg-white border border-dark-brown/30 rounded-xl p-2 h-10 mt-1 outline-none">
-                                <option value="food">美食</option>
-                                <option value="shop">購物</option>
+                                <option value="food">🔴 美食</option>
+                                <option value="shop">🟣 購物</option>
                             </select>
                         </div>
                         <div class="min-w-0">
@@ -1288,8 +1292,9 @@
         createApp({
             setup() {
                 const STORAGE_KEY_PREFIX = 'BUSAN_2027_';
+                // 【成員名單】若將來需要新增第 5 位成員，只需在此陣列加上名字即可自動適應全站
                 const members = ['Candice', 'Carmen', 'Christy', 'Tung'];
-                const currentUser = ref(localStorage.getItem(STORAGE_KEY_PREFIX + 'CURRENT_USER') || 'Candice');
+                const currentUser = ref(localStorage.getItem(STORAGE_KEY_PREFIX + 'CURRENT_USER') || members[0]);
 
                 // 精緻還原刺繡章膠囊小火車造型 (含凸起車頂、大車窗、左右側窗、黃色車燈、粉紅愛心與小黑輪)
                 const createTrainSvgDataUrl = (bodyColor) => {
@@ -1308,13 +1313,13 @@
                     </svg>`;
                     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
                 };
-
-                // 直接內建四色膠囊小火車 SVG
+                // 直接內建五色膠囊小火車 SVG (紫色專屬購物分類與第 5 車廂備用)
                 const trainIcons = {
                     red: createTrainSvgDataUrl('#E4776C'),
                     yellow: createTrainSvgDataUrl('#FBD76D'),
                     green: createTrainSvgDataUrl('#92C889'),
-                    blue: createTrainSvgDataUrl('#6EA2CE')
+                    blue: createTrainSvgDataUrl('#6EA2CE'),
+                    purple: createTrainSvgDataUrl('#B39CD0')
                 };
 
                 // Banner Image (預設 busan.jpg)
@@ -1472,7 +1477,7 @@
 
                 const expenseList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'EXPENSES')) || []);
                 const commonPoolTotal = ref(parseInt(localStorage.getItem(STORAGE_KEY_PREFIX + 'POOL')) || 0);
-                const perPersonPoolInput = ref(commonPoolTotal.value ? Math.round(commonPoolTotal.value / 4) : '');
+                const perPersonPoolInput = ref(commonPoolTotal.value ? Math.round(commonPoolTotal.value / members.length) : '');
                 
                 const defaultPacking = () => [
                     { id: 1, name: '護照 & K-ETA / 入境卡資料', type: 'carry_on', packed: false },
@@ -1487,7 +1492,7 @@
                 const flightList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'FLIGHTS')) || []);
                 const hotelList = ref(JSON.parse(localStorage.getItem(STORAGE_KEY_PREFIX + 'HOTELS')) || []);
 
-                // 出發前四人待辦事項 (預設釜山行前提醒)
+                // 出發前待辦事項 (預設釜山行前提醒)
                 const defaultTodos = [
                     { id: 101, text: '搶海雲台藍線公園膠囊小火車票 (出發前2週韓國 00:00 開放)', done: false, doneBy: '' },
                     { id: 102, text: '購買韓國 eSIM 電話卡 & 旅遊保險', done: false, doneBy: '' },
@@ -1621,7 +1626,7 @@
                 });
 
                 const calculateCurrencyData = (targetCurrency) => {
-                    const balances = { Candice: 0, Carmen: 0, Christy: 0, Tung: 0 };
+                    const balances = Object.fromEntries(members.map(m => [m, 0]));
                     expenseList.value.forEach(exp => {
                         const expCurr = exp.currency || 'KRW';
                         if (expCurr === targetCurrency && exp.payer !== 'POOL' && members.includes(exp.payer)) {
@@ -1708,7 +1713,7 @@
                         flight: trainIcons.red,
                         train: trainIcons.red,
                         sight: trainIcons.yellow,
-                        shop: trainIcons.yellow,
+                        shop: trainIcons.purple,
                         food: trainIcons.green,
                         other: trainIcons.green,
                         hotel: trainIcons.blue
@@ -1719,7 +1724,7 @@
                 const getCategoryBorderColor = (type) => {
                     const map = {
                         sight: 'border-sunset-yellow',
-                        shop: 'border-sunset-yellow',
+                        shop: 'border-lavender-purple',
                         food: 'border-forest-green',
                         other: 'border-forest-green',
                         hotel: 'border-sky-blue',
@@ -1740,7 +1745,7 @@
 
                 const updateTotalPoolFromPerPerson = () => {
                     if (perPersonPoolInput.value >= 0) {
-                        commonPoolTotal.value = perPersonPoolInput.value * 4;
+                        commonPoolTotal.value = perPersonPoolInput.value * members.length;
                     }
                 };
                 const savePoolSetting = () => {
